@@ -77,15 +77,25 @@ def not_operator():         return '!'
 
 def at_operator():         return '@'
 
-def symbol():               return -1, [' ', '\n', '\t'], 0, [not_operator, at_operator], 0, dollar, re.compile(r'[\w\-\+]+')
+def symbol():               return -1, [' ', '\n', '\t'], 0, [not_operator, at_operator], 0, dollar, identifier
 
 def array():                return symbol, "[", 0, expression, "]"
 
 def modifier():             return [object_dereference, array, symbol, variable_string, string], -2, modifier_right, 0, ' '
 
-def expression():           return [modifier, object_dereference, array, symbol, string, variable_string]
+def identifier():           return re.compile(r'[\w\-\+]+')
+
+def func_call():            return identifier, left_paren, 0, func_params, right_paren
+
+def func_params():          return func_param, -1, (',', junk, func_param)
+
+def func_param():           return [symbol, string]
+
+def expression():           return [func_call, modifier, object_dereference, object_dereference2, array, symbol, string, variable_string]
 
 def object_dereference():   return [array, symbol], '.', expression
+
+def object_dereference2():   return [array, symbol], '->', identifier
 
 def exp_no_modifier():      return [object_dereference, array, symbol, variable_string, string]
 
@@ -98,7 +108,7 @@ def else_statement():       return '{', keyword('else'), '}', -1, smarty_languag
 
 def foreachelse_statement():return '{', keyword('foreachelse'), '}', -1, smarty_language
 
-def print_statement():      return '{', 0, 'e ', expression, '}'
+def print_statement():      return '{', 0, 'e ', expression, 0, ' nofilter', '}'
 
 def function_parameter():   return symbol, '=', expression, junk
 
@@ -114,7 +124,8 @@ def for_key():              return junk, keyword('key'), '=', 0, ['"', '\''], sy
 
 def elseif_statement():     return '{', keyword('elseif'), -1, left_paren, expression, -1, right_paren, -1, (operator, -1, left_paren, expression, -1, right_paren), '}', -1, smarty_language
 
-def if_statement():         return '{', keyword('if'), -1, left_paren, expression, -1, right_paren, -1, (operator, -1, left_paren, expression, -1, right_paren), '}', -1, smarty_language, -1, [else_statement, elseif_statement], '{/', keyword('if'), '}'
+def if_statement():         return ('{', keyword('if'), junk, -1, left_paren, expression, -1, right_paren, -1, (operator, junk, -1, left_paren, expression, -1, right_paren), '}',
+                                   -1, smarty_language, -1, [else_statement, elseif_statement], '{/', keyword('if'), '}')
 
 def for_statement():        return '{', keyword('foreach'), -1, [for_from, for_item, for_name, for_key], '}', -1, smarty_language, 0, foreachelse_statement, '{/', keyword('foreach'), '}'
 
