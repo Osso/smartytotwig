@@ -17,6 +17,13 @@ def test_print_symbol():
     r = convert_code("{$foo}")
     assert r == "{{ foo }}"
 
+def test_print_func():
+    r = convert_code("{foo|bar:param1}")
+    assert r == "{{ foo|bar(param1) }}"
+
+def test_print_func_array():
+    r = convert_code("{foo|bar:param1['hello']}")
+    assert r == "{{ foo|bar(param1['hello']) }}"
 
 def test_if_statement():
     """Test an if statement (no else or elseif)"""
@@ -61,21 +68,21 @@ def test_if_statement6():
 def test_function_statement():
     """Test a a simple function statement."""
     r = convert_code("{foo arg1=bar arg2=3}")
-    assert r == "{{['arg1': bar, 'arg2': 3]|foo}}"
+    assert r == "{{ ['arg1': bar, 'arg2': 3]|foo }}"
 
 
 def test_function_statement2():
     """Test a a simple function statement with object and array arguments."""
     r = convert_code(
         "{foo arg1=bar[1] arg2=foo.bar.foo arg3=foo.bar[3] arg4=foo.bar.awesome[3] }")
-    assert r == "{{['arg1': bar[1], 'arg2': foo.bar.foo, 'arg3': foo.bar[3], 'arg4': foo.bar.awesome[3]]|foo}}"
+    assert r == "{{ ['arg1': bar[1], 'arg2': foo.bar.foo, 'arg3': foo.bar[3], 'arg4': foo.bar.awesome[3]]|foo }}"
 
 
 def test_function_statement3():
     """Test a function statement with modifiers in in the parameters."""
     r = convert_code(
         "{foo arg1=bar[1]|modifier arg2=foo.bar.foo arg3=foo.bar[3]|modifier:array[0]:\"hello $foo \" arg4=foo.bar.awesome[3]|modifier2:7:'hello':\"hello\":\"`$apple.banana`\"}")
-    assert r == "{{[\'arg1\': bar[1]|modifier, \'arg2\': foo.bar.foo, \'arg3\': foo.bar[3]|modifier(array[0], \"hello %s \"|format(foo)), \'arg4\': foo.bar.awesome[3]|modifier2(7, \'hello\', \"hello\", \"%s\"|format(apple.banana))]|foo}}"
+    assert r == "{{ [\'arg1\': bar[1]|modifier, \'arg2\': foo.bar.foo, \'arg3\': foo.bar[3]|modifier(array[0], \"hello %s \"|format(foo)), \'arg4\': foo.bar.awesome[3]|modifier2(7, \'hello\', \"hello\", \"%s\"|format(apple.banana))]|foo }}"
 
 
 def test_for_statement():

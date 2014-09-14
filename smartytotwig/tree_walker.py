@@ -96,7 +96,7 @@ class TreeWalker(object):
                 for text in v:
                     string_contents = "%s%s" % (string_contents, text)
             else:  # An exprssion.
-                string_contents = "%s%s" % (string_contents, '%s')
+                string_contents = "%s%%s" % string_contents
 
                 expression = self.__walk_tree(
                     {'expression': self.expression},
@@ -139,7 +139,7 @@ class TreeWalker(object):
         # Cycle through the function_parameters and store them
         # these will be passed into the modifier as a dictionary.
         function_params = {}
-        for k, v in ast[1:]:
+        for dummy, v in ast[1:]:
             symbol = self.__walk_tree(
                 {'symbol': self.symbol},
                 v,
@@ -168,23 +168,11 @@ class TreeWalker(object):
             return code
 
         # Now create a dictionary string from the paramters.
-        function_params_string = '['
-        i = 0
-        size = len(function_params.items())
-        for k, v in function_params.items():
-            function_params_string = "%s'%s': %s" % (
-                function_params_string,
-                k,
-                v
-            )
+        function_params_string = '[%s]' % \
+            ", ".join("'%s': %s" % (k, v)
+                      for k, v in function_params.items())
 
-            i += 1
-            if not i == size:
-                function_params_string = "%s, " % function_params_string
-
-        function_params_string = "%s]" % function_params_string
-
-        code = "%s{{%s|%s}}" % (
+        code = "%s{{ %s|%s }}" % (
             code,
             function_params_string,
             function_name
@@ -211,7 +199,7 @@ class TreeWalker(object):
         if expression in self.keywords:
             return "%s%s" % (code, self.keywords[expression])
 
-        return "%s{{%s}}" % (code, expression)
+        return "%s{{ %s }}" % (code, expression)
 
     def modifier(self, ast, code):
         """
@@ -219,7 +207,7 @@ class TreeWalker(object):
 
         foo|bar:a:b:c
         """
-
+        print 'ast', ast
         # Walking the expression that starts a
         # modifier statement.
         code = self.__walk_tree(
@@ -260,7 +248,7 @@ class TreeWalker(object):
         if len(ast) > 1:
             code = "%s(%s)" % (
                 code,
-                ", ".join(self.expression(v, code)
+                ", ".join(self.expression(v, "")
                           for dummy, v in ast[1:])
             )
 
@@ -567,7 +555,7 @@ class TreeWalker(object):
 
         code = handlers[ast[0][0]](ast[0][1], code)
 
-        if (len(ast) > 1):
+        if len(ast) > 1:
             code = "%s[%s]" % (
                 code,
                 handlers[ast[1][0]](ast[1][1], "")
@@ -593,7 +581,7 @@ class TreeWalker(object):
         """
 
         # Assume no $ on the symbol.
-        variable = ast[0]
+        variable = ast[-1]
 
         # Is there a ! operator.
         if ast[0]:
@@ -601,10 +589,6 @@ class TreeWalker(object):
                 code = "%snot " % code
             elif ast[0][0] == 'at_operator':
                 pass  # Nom nom, at operators are not supported in Twig
-
-        # Maybe there was a $ on the symbol?.
-        if len(ast) > 1:
-            variable = ast[len(ast) - 1]
 
         return "%s%s" % (code, variable)
 
@@ -620,7 +604,7 @@ class TreeWalker(object):
                     code = "%s(" % code
                 elif k == 'comment':
                     # Comments in Twig have {# not {*
-                    code = "%s{#%s#}" % (code, v[2:len(v) - 2])
+                    code = "%s{#%s#}" % (code, v[2:-2])
                 else:
                     code = handlers[k](v, code)
 
