@@ -1,37 +1,15 @@
-"""
-The MIT License
-
-Copyright (c) 2010 FreshBooks
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-"""
+# pylint: disable=C0321
 
 import re
-from smartytotwig.pyPEG import parse
-from smartytotwig.pyPEG import keyword, _and, _not, ignore
+
+from smartytotwig.pyPEG import keyword
 
 """
 Misc.
 """
 def content():              return re.compile(r'[^{]+')
 
-def comment():              return re.compile("{\*.*?\*}", re.S)
+def comment():              return re.compile(r"{\*.*?\*}", re.S)
 
 def literal():              return re.compile("{literal}.*?{/literal}", re.S)
 
@@ -75,9 +53,9 @@ def dollar():               return '$'
 
 def not_operator():         return '!'
 
-def at_operator():         return '@'
+def at_operator():          return '@'
 
-def symbol():               return -1, [' ', '\n', '\t'], 0, [not_operator, at_operator], 0, dollar, identifier
+def symbol():               return -1, [' ', '\n', '\t'], 0, [not_operator, at_operator], 0, dollar, re.compile(r'[\w\-\+]+')
 
 def array():                return symbol, "[", 0, expression, "]"
 
@@ -85,7 +63,7 @@ def modifier():             return [object_dereference, array, symbol, variable_
 
 def identifier():           return re.compile(r'[\w\-\+]+')
 
-def func_call():            return identifier, left_paren, 0, func_params, right_paren
+def func_call():            return re.compile(r'[\w\-\+]+'), left_paren, 0, func_params, right_paren
 
 def func_params():          return func_param, -1, (',', junk, func_param)
 
@@ -95,7 +73,7 @@ def expression():           return [func_call, modifier, object_dereference, obj
 
 def object_dereference():   return [array, symbol], '.', expression
 
-def object_dereference2():   return [array, symbol], '->', identifier
+def object_dereference2():  return [array, symbol], '->', re.compile(r'[\w\-\+]+')
 
 def exp_no_modifier():      return [object_dereference, array, symbol, variable_string, string]
 
@@ -127,7 +105,9 @@ def elseif_statement():     return '{', keyword('elseif'), -1, left_paren, expre
 def if_statement():         return ('{', keyword('if'), junk, -1, left_paren, expression, -1, right_paren, -1, (operator, junk, -1, left_paren, expression, -1, right_paren), '}',
                                    -1, smarty_language, -1, [else_statement, elseif_statement], '{/', keyword('if'), '}')
 
-def for_statement():        return '{', keyword('foreach'), -1, [for_from, for_item, for_name, for_key], '}', -1, smarty_language, 0, foreachelse_statement, '{/', keyword('foreach'), '}'
+def foreach_array():        return symbol, ' as ', symbol
+
+def for_statement():        return '{', keyword('foreach'), -1, [for_from, for_item, for_name, for_key, foreach_array], '}', -1, smarty_language, 0, foreachelse_statement, '{/', keyword('foreach'), '}'
 
 """
 Finally, the actual language description.
