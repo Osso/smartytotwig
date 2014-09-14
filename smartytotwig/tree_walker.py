@@ -340,7 +340,7 @@ class TreeWalker(object):
         {/if}
         """
 
-        code = "%s{%% if " % code
+        code += "{% if "
 
         # Walking the expressions in an if statement.
         code = self.__walk_tree(
@@ -354,10 +354,7 @@ class TreeWalker(object):
             code
         )
 
-        code = "%s %s}" % (
-            code,
-            '%'
-        )
+        code += " %}"
 
         # The content inside the if statement.
         code = self.__walk_tree(
@@ -376,7 +373,9 @@ class TreeWalker(object):
             code
         )
 
-        return '%s{%% endif %%}' % code
+        code += '{% endif %}'
+
+        return code
 
     def elseif_statement(self, ast, code):
         """
@@ -400,7 +399,7 @@ class TreeWalker(object):
             code
         )
 
-        code = "%s %%}" % code
+        code += " %}"
 
         # The content inside the if statement.
         code = self.__walk_tree(
@@ -416,7 +415,7 @@ class TreeWalker(object):
         The else part of an if statement.
         """
 
-        code = "%s{%% else %%}" % code
+        code += "{% else %}"
 
         # The content inside the if statement.
         code = self.__walk_tree(
@@ -499,6 +498,35 @@ class TreeWalker(object):
 
         return code
 
+    def func_param(self, ast, code):
+        return self.__walk_tree(
+                            {
+                                'symbol': self.symbol,
+                                'string': self.string,
+                            },
+                            ast,
+                            "")
+
+    def func_params(self, ast, code):
+        print 'func_params', ast
+        code = ", ".join(self.__walk_tree(
+                            {
+                                'func_param': self.func_param,
+                            },
+                            [param],
+                            "") for param in ast if param[0] != 'junk')
+        print 'code', code
+        return code
+
+    def func_call(self, ast, code):
+        params = self.__walk_tree(
+            {'func_params': self.func_params},
+            [ast[2]],
+            ""
+        )
+        code += "%s(%s)" % (ast[0], params)
+        return code
+
     def expression(self, ast, code):
         """
         A top level expression in Smarty that statements
@@ -513,7 +541,8 @@ class TreeWalker(object):
                 'variable_string': self.variable_string,
                 'object_dereference': self.object_dereference,
                 'array': self.array,
-                'modifier': self.modifier
+                'modifier': self.modifier,
+                'func_call': self.func_call,
             },
             ast,
             ""

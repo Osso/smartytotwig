@@ -98,6 +98,30 @@ def test_if_greater_or_equal_statement():
     assert r == "{% if foo >= bar %}\nhello\n{% endif %}"
 
 
+def test_if_func_statement():
+    r = convert_code(
+        "{if foo(bar)}\nhello\n{/if}")
+    assert r == "{% if foo(bar) %}\nhello\n{% endif %}"
+
+
+def test_if_func_no_param_statement():
+    r = convert_code(
+        "{if foo()}\nhello\n{/if}")
+    assert r == "{% if foo() %}\nhello\n{% endif %}"
+
+
+def test_if_func_multiple_params_statement():
+    r = convert_code(
+        "{if foo(bar1, bar2)}\nhello\n{/if}")
+    assert r == "{% if foo(bar1, bar2) %}\nhello\n{% endif %}"
+
+
+def test_if_func_var_params_statement():
+    r = convert_code(
+        "{if foo($bar1, $bar2)}\nhello\n{/if}")
+    assert r == "{% if foo(bar1, bar2) %}\nhello\n{% endif %}"
+
+
 def test_if_statement1():
     """Test an if statement (no else or elseif)"""
     r = convert_code(
