@@ -135,7 +135,6 @@ class TreeWalker(object):
             ast,
             ""
         )
-        print 'ast', ast
         # Cycle through the function_parameters and store them
         # these will be passed into the modifier as a dictionary.
         function_params = []
@@ -508,14 +507,12 @@ class TreeWalker(object):
                             "")
 
     def func_params(self, ast, code):
-        print 'func_params', ast
         code = ", ".join(self.__walk_tree(
                             {
                                 'func_param': self.func_param,
                             },
                             [param],
                             "") for param in ast if param[0] != 'junk')
-        print 'code', code
         return code
 
     def func_call(self, ast, code):
