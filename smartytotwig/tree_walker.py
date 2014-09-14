@@ -135,10 +135,10 @@ class TreeWalker(object):
             ast,
             ""
         )
-
+        print 'ast', ast
         # Cycle through the function_parameters and store them
         # these will be passed into the modifier as a dictionary.
-        function_params = {}
+        function_params = []
         for dummy, v in ast[1:]:
             symbol = self.__walk_tree(
                 {'symbol': self.symbol},
@@ -152,7 +152,7 @@ class TreeWalker(object):
                 ""
             )
 
-            function_params[symbol] = expression
+            function_params.append((symbol, expression))
 
         # Deal with the special case of an include function in
         # smarty this should be mapped onto Twig's include tag.
@@ -170,7 +170,7 @@ class TreeWalker(object):
         # Now create a dictionary string from the paramters.
         function_params_string = '[%s]' % \
             ", ".join("'%s': %s" % (k, v)
-                      for k, v in function_params.items())
+                      for k, v in function_params)
 
         code = "%s{{ %s|%s }}" % (
             code,
@@ -207,7 +207,7 @@ class TreeWalker(object):
 
         foo|bar:a:b:c
         """
-        print 'ast', ast
+
         # Walking the expression that starts a
         # modifier statement.
         code = self.__walk_tree(

@@ -31,6 +31,12 @@ def test_print_func_array():
 def test_if_statement():
     """Test an if statement (no else or elseif)"""
     r = convert_code(
+        "{if foo}\nbar\n{/if}")
+    assert r == "{% if foo %}\nbar\n{% endif %}"
+
+def test_if_statement1():
+    """Test an if statement (no else or elseif)"""
+    r = convert_code(
         "{if !foo or foo.bar or foo|bar:foo['hello']}\nfoo\n{/if}")
     assert r == "{% if not foo or foo.bar or foo|bar(foo['hello']) %}\nfoo\n{% endif %}"
 
