@@ -25,9 +25,9 @@ before_install:
   - sudo apt-get -qqy update
 
 install:
-  - pip install hg+https://bitbucket.org/fdik/pypeg@2.15.0
-  - pip install tox
-  - pip install .
+  - pip install -q hg+https://bitbucket.org/fdik/pypeg@2.15.0
+  - pip install -q tox
+  - pip install -q .
 
 script:
   - tox
