@@ -1,12 +1,13 @@
-h1. Smarty to Twig
+### Smarty to Twig
 
 Converts templates in the smarty templating language to the twig templating language.
 
-*Installation*
+## Installation
+
 
 _python setup.py install_
 
-*Usage:*
+## Usage:
 
 _smartytotwig --smarty-file=examples/guestbook.tpl --twig-file=output.twig_
 
