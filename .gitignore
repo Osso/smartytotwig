@@ -3,4 +3,4 @@ dist/*
 *.pyc
 *.egg*
 .DS_Store
-
+.tox
