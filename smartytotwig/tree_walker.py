@@ -1,6 +1,10 @@
 import re
 
 
+def node_type(node):
+    return node[0]
+
+
 class TreeWalker(object):
 
     """
@@ -22,7 +26,7 @@ class TreeWalker(object):
         'else': '{% else %}',
     }
 
-    def __init__(self, ast, twig_extension="", twig_path=""):
+    def __init__(self, twig_extension="", twig_path=""):
         """
         The AST structure is created by pyPEG.
         """
@@ -35,10 +39,11 @@ class TreeWalker(object):
         if twig_path:
             self.twig_path = twig_path
 
+    def walk(self, ast):
         # Top level handler for walking the tree.
-        self.code = self.smarty_language(ast, '')
+        return self.smarty_language(ast)
 
-    def smarty_language(self, ast, code):
+    def smarty_language(self, ast, code=''):
         """
         The entry-point for the parser.
         contains a set of top-level smarty
@@ -508,9 +513,7 @@ class TreeWalker(object):
 
     def func_params(self, ast, code):
         code = ", ".join(self.__walk_tree(
-                            {
-                                'func_param': self.func_param,
-                            },
+                            {'func_param': self.func_param},
                             [param],
                             "") for param in ast if param[0] != 'junk')
         return code
@@ -551,7 +554,7 @@ class TreeWalker(object):
                 expression = v
                 break
 
-        code = "%s%s" % (code, expression)
+        code += expression
 
         return code
 
@@ -624,9 +627,9 @@ class TreeWalker(object):
 
         # Is there a ! operator.
         if ast[0]:
-            if ast[0][0] == 'not_operator':
-                code = "%snot " % code
-            elif ast[0][0] == 'at_operator':
+            if node_type(ast[0]) == 'not_operator':
+                code += "not "
+            elif node_type(ast[0]) == 'at_operator':
                 pass  # Nom nom, at operators are not supported in Twig
 
         return "%s%s" % (code, variable)
@@ -638,12 +641,12 @@ class TreeWalker(object):
         for k, v in ast:
             if k in handlers:
                 if k == 'right_paren':
-                    code = "%s)" % code
+                    code += ")"
                 elif k == 'left_paren':
-                    code = "%s(" % code
+                    code += "("
                 elif k == 'comment':
                     # Comments in Twig have {# not {*
-                    code = "%s{#%s#}" % (code, v[2:-2])
+                    code += "{#%s#}" % v[2:-2]
                 else:
                     code = handlers[k](v, code)
 

@@ -11,7 +11,7 @@ from smartytotwig.tree_walker import TreeWalker
 def convert_code(smarty_code):
     ast = smartytotwig.parse_string(smarty_code)
     tree_walker = TreeWalker(ast)
-    return tree_walker.code
+    return tree_walker.walk(ast)
 
 
 def test_print_symbol():
