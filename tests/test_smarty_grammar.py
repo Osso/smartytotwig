@@ -6,11 +6,12 @@ grammar more sane.
 import smartytotwig
 
 from smartytotwig.tree_walker import TreeWalker
+from smartytotwig.twig_printer import TwigPrinter
 
 
 def convert_code(smarty_code):
     ast = smartytotwig.parse_string(smarty_code)
-    tree_walker = TreeWalker(ast)
+    tree_walker = TreeWalker(TwigPrinter())
     return tree_walker.walk(ast)
 
 
@@ -139,7 +140,7 @@ def test_if_statement3():
     """Test an an if with an else and an elseif and two logical operations."""
     r = convert_code(
         "{if foo and awesome.string|banana:\"foo\\\" $a\"}\nbar\n{elseif awesome.sauce[1] and blue and 'hello'}\nfoo{/if}")
-    assert r == "{% if foo and awesome.string|banana(\"foo\\\" %s\"|format(a)) %}\nbar\n{% elseif awesome.sauce[1] and blue and \'hello\' %}\nfoo{% endif %}"
+    assert r == "{% if foo and awesome.string|banana(\"foo\\\" %s\"|format(a)) %}\nbar\n{% elseif awesome.sauce[1] and blue and 'hello' %}\nfoo{% endif %}"
 
 
 def test_if_statement4():
