@@ -26,7 +26,6 @@ before_install:
 
 install:
   - pip install hg+https://bitbucket.org/fdik/pypeg@2.15.0
-  - pip install pytest
   - pip install tox
   - pip install .
 
