@@ -17,17 +17,21 @@ def test_print_symbol():
     r = convert_code("{$foo}")
     assert r == "{{ foo }}"
 
+
 def test_print_func():
     r = convert_code("{foo|bar:param1}")
     assert r == "{{ foo|bar(param1) }}"
+
 
 def test_print_func_array():
     r = convert_code("{foo|bar:param1['hello']}")
     assert r == "{{ foo|bar(param1['hello']) }}"
 
+
 def test_if_statement():
     """Test an if statement (no else or elseif)"""
-    r = convert_code("{if !foo or foo.bar or foo|bar:foo['hello']}\nfoo\n{/if}")
+    r = convert_code(
+        "{if !foo or foo.bar or foo|bar:foo['hello']}\nfoo\n{/if}")
     assert r == "{% if not foo or foo.bar or foo|bar(foo['hello']) %}\nfoo\n{% endif %}"
 
 
