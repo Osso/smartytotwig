@@ -1,6 +1,9 @@
 ### Smarty to Twig
 
-Converts templates in the smarty templating language to the twig templating language.
+Converts templates in the smarty 3 templating language to the twig templating language.
+
+This is based on https://github.com/freshrichard/smartytotwig
+
 
 ## Installation
 
