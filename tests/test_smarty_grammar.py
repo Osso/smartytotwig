@@ -98,6 +98,20 @@ def test_function_statement3():
 def test_for_statement():
     """Test a a simple foreach statement."""
     r = convert_code(
+        "{foreach $foo as $bar}{/foreach}")
+    assert r == "{% for bar in foo %}{% endfor %}"
+
+
+def test_old_for_statement():
+    """Test a a simple foreach statement."""
+    r = convert_code(
+        "{foreach item=bar from=foo}{/foreach}")
+    assert r == "{% for bar in foo %}{% endfor %}"
+
+
+def test_old_for_statement1():
+    """Test a a simple foreach statement."""
+    r = convert_code(
         "{foreach item=bar from=foo }{/foreach}")
     assert r == "{% for bar in foo %}{% endfor %}"
 

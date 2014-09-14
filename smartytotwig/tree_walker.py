@@ -281,6 +281,19 @@ class TreeWalker(object):
         for k, v in ast:
             for_parts[k] = v
 
+        if 'foreach_array' in for_parts:
+            code2 = self.__walk_tree(
+                {'symbol': self.symbol},
+                [for_parts['foreach_array'][0]],
+                ""
+            )
+            code1 = self.__walk_tree(
+                {'symbol': self.symbol},
+                [for_parts['foreach_array'][1]],
+                ""
+            )
+            code += "%s in %s" % (code1, code2)
+
         # What variable is the for data being stored as.
         if 'for_item' in for_parts:
             code = self.__walk_tree(
