@@ -1,6 +1,7 @@
 """
 It's easy to screw up other rules when modifying the underlying grammar.
-These unit tests test various smarty statements, to make refactoring the grammar more sane.
+These unit tests test various smarty statements, to make refactoring the
+grammar more sane.
 """
 import smartytotwig
 
@@ -28,11 +29,74 @@ def test_print_func_array():
     assert r == "{{ foo|bar(param1['hello']) }}"
 
 
+def test_print_string():
+    r = convert_code("{'foo'}")
+    assert r == "{{ 'foo' }}"
+
+
+def test_print_string2():
+    r = convert_code('{"foo"}')
+    assert r == '{{ "foo" }}'
+
+
+def test_print_variable_string():
+    r = convert_code('{"$foo"}')
+    assert r == '{{ "%s"|format(foo) }}'
+
+
 def test_if_statement():
-    """Test an if statement (no else or elseif)"""
     r = convert_code(
-        "{if foo}\nbar\n{/if}")
-    assert r == "{% if foo %}\nbar\n{% endif %}"
+        "{if foo}\nhello\n{/if}")
+    assert r == "{% if foo %}\nhello\n{% endif %}"
+
+
+def test_if_and_statement():
+    r = convert_code(
+        "{if foo and bar}\nhello\n{/if}")
+    assert r == "{% if foo and bar %}\nhello\n{% endif %}"
+
+
+def test_if_or_statement():
+    r = convert_code(
+        "{if foo or bar}\nhello\n{/if}")
+    assert r == "{% if foo or bar %}\nhello\n{% endif %}"
+
+
+def test_if_equal_statement():
+    r = convert_code(
+        "{if foo == bar}\nhello\n{/if}")
+    assert r == "{% if foo == bar %}\nhello\n{% endif %}"
+
+
+def test_if_not_equal_statement():
+    r = convert_code(
+        "{if foo != bar}\nhello\n{/if}")
+    assert r == "{% if foo != bar %}\nhello\n{% endif %}"
+
+
+def test_if_lower_statement():
+    r = convert_code(
+        "{if foo < bar}\nhello\n{/if}")
+    assert r == "{% if foo < bar %}\nhello\n{% endif %}"
+
+
+def test_if_lower_or_equal_statement():
+    r = convert_code(
+        "{if foo <= bar}\nhello\n{/if}")
+    assert r == "{% if foo <= bar %}\nhello\n{% endif %}"
+
+
+def test_if_greater_statement():
+    r = convert_code(
+        "{if foo > bar}\nhello\n{/if}")
+    assert r == "{% if foo > bar %}\nhello\n{% endif %}"
+
+
+def test_if_greater_or_equal_statement():
+    r = convert_code(
+        "{if foo >= bar}\nhello\n{/if}")
+    assert r == "{% if foo >= bar %}\nhello\n{% endif %}"
+
 
 def test_if_statement1():
     """Test an if statement (no else or elseif)"""
@@ -116,15 +180,30 @@ def test_old_for_statement1():
     assert r == "{% for bar in foo %}{% endfor %}"
 
 
-def test_for_statement2():
+def test_old_for_statement2():
     """Test a more complex foreach statement."""
     r = convert_code(
         "{foreach item='bar'    name=snuh key=\"foobar\" from=foo[5].bar[2]|hello:\"world\":\" $hey \" }bar{/foreach}")
     assert r == "{% for bar in foo[5].bar[2]|hello(\"world\", \" %s \"|format(hey)) %}bar{% endfor %}"
 
 
-def test_for_statement3():
+def test_old_for_statement3():
     """Test a for statement with a foreachelse clause."""
     r = convert_code(
         "{foreach item='bar'    name=snuh key=\"foobar\" from=foo.bar[2]|hello:\"world\":\" $hey \" }bar{foreachelse}{if !foo}bar{/if}hello{/foreach}")
     assert r == "{% for bar in foo.bar[2]|hello(\"world\", \" %s \"|format(hey)) %}bar{% else %}{% if not foo %}bar{% endif %}hello{% endfor %}"
+
+
+def test_content():
+    r = convert_code("hello")
+    assert r == 'hello'
+
+
+def test_comment():
+    r = convert_code("{* hello *}")
+    assert r == '{# hello #}'
+
+
+def test_literal():
+    r = convert_code("{literal}{foo}{/literal}")
+    assert r == '{foo}'
