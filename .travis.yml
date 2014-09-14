@@ -19,15 +19,16 @@
 
 language: python
 python:
-  - "2.6"
+  - "2.7"
 
 before_install:
   - sudo apt-get -qqy update
 
 install:
   - pip install hg+https://bitbucket.org/fdik/pypeg@2.15.0
-  - pip install nose
+  - pip install pytest
   - pip install tox
+  - pip install .
 
 script:
   - tox
