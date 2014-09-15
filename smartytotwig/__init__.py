@@ -1,21 +1,19 @@
 import fileinput
+import pypeg2
 
-from smartytotwig.smarty_grammar import smarty_language
-from smartytotwig.pyPEG import parse, parseLine, parser
+from .smarty_grammar import SmartyLanguage
 
 
-def parse_file(file_name, language=smarty_language):
+def parse_file(file_name, language=SmartyLanguage):
     """
     Parse a smarty template file.
     """
     file_input = fileinput.FileInput(file_name)
-    return parse(language, file_input, False)
+    return pypeg2.parse(file_input, language, whitespace="")
 
 
-def parse_string(text, language=smarty_language):
+def parse_string(text, language=SmartyLanguage):
     """
     Parse a Smarty template string.
     """
-    p = parser()
-    result, text = p.parseLine(text, language, [], False)
-    return result[0][1] # Don't return the 'smarty_language' match.
+    return pypeg2.parse(text, language, whitespace="")
