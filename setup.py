@@ -1,13 +1,9 @@
 #!/usr/bin/env python
 from setuptools import setup, find_packages
-import ConfigParser
 
-# Read version.conf and use the version #.
-config = ConfigParser.ConfigParser()
-config.readfp(open('version.conf'))
 
 setup(name="smartytotwig",
-      version=config.get('app:main', 'version'),
+      version='0.1',
       description="Converts Smarty templates into Twig templates.",
       author="Ben Coe",
       author_email="coe@freshbooks.com",
