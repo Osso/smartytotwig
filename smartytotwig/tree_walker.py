@@ -187,7 +187,6 @@ class TreeWalker(object):
         def visit_el(el):
             if isinstance(el, tuple):
                 node = Node.from_dict(el)
-                print 'el', el
                 return self.visit(node)
             elif isinstance(el, str):
                 return el
@@ -411,7 +410,6 @@ class TreeWalker(object):
         {/if}
         """
         code = "{% if "
-        print 'ast', ast
 
         # Walking the expressions in an if statement.
         for node in ast:
