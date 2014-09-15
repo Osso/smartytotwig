@@ -55,25 +55,23 @@ def not_operator():         return '!'
 
 def at_operator():          return '@'
 
-def symbol():               return -1, [' ', '\n', '\t'], 0, [not_operator, at_operator], 0, dollar, re.compile(r'[\w\-\+]+')
+def symbol():               return -1, [' ', '\n', '\t'], 0, [not_operator, at_operator], 0, dollar, identifier
+
+def dollar_symbol():               return -1, [' ', '\n', '\t'], 0, [not_operator, at_operator], dollar, identifier
 
 def array():                return symbol, "[", 0, expression, "]"
 
 def modifier():             return [object_dereference, array, symbol, variable_string, string], -2, modifier_right, 0, ' '
 
-def identifier():           return re.compile(r'[\w\-\+]+')
+def identifier():           return re.compile(r'[\w\-\+]*\w')
 
-def func_call():            return re.compile(r'[\w\-\+]+'), left_paren, 0, func_params, right_paren
+def func_call():            return identifier, left_paren, 0, func_params, right_paren
 
-def func_params():          return func_param, -1, (',', junk, func_param)
+def func_params():          return expression, -1, (',', junk, expression)
 
-def func_param():           return [symbol, string]
+def expression():           return [func_call, modifier, object_dereference, array, symbol, string, variable_string]
 
-def expression():           return [func_call, modifier, object_dereference, object_dereference2, array, symbol, string, variable_string]
-
-def object_dereference():   return [array, symbol], '.', expression
-
-def object_dereference2():  return [array, symbol], '->', re.compile(r'[\w\-\+]+')
+def object_dereference():   return [array, symbol], ['.', '->'], expression
 
 def exp_no_modifier():      return [object_dereference, array, symbol, variable_string, string]
 
@@ -86,7 +84,7 @@ def else_statement():       return '{', keyword('else'), '}', -1, smarty_languag
 
 def foreachelse_statement():return '{', keyword('foreachelse'), '}', -1, smarty_language
 
-def print_statement():      return '{', 0, 'e ', expression, 0, ' nofilter', '}'
+def print_statement():      return '{', 0, 'e ', [func_call, modifier, object_dereference, array, dollar_symbol, string, variable_string], 0, ' nofilter', '}'
 
 def function_parameter():   return symbol, '=', expression, junk
 

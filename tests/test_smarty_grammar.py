@@ -45,6 +45,16 @@ def test_print_variable_string():
     assert r == '{{ "%s"|format(foo) }}'
 
 
+def test_object_dereference():
+    r = convert_code('{"$foo->hello"}')
+    assert r == '{{ "%s"|format(foo.hello) }}'
+
+
+def test_object_dereference2():
+    r = convert_code('{"$foo.hello"}')
+    assert r == '{{ "%s"|format(foo.hello) }}'
+
+
 def test_if_statement():
     r = convert_code(
         "{if foo}\nhello\n{/if}")
@@ -130,7 +140,7 @@ def test_if_statement1():
     assert r == "{% if not foo or foo.bar or foo|bar(foo['hello']) %}\nfoo\n{% endif %}"
 
 
-def test_if_statement2():
+def test_if_else_statement():
     """Test an an if with an else and a single logical operation."""
     r = convert_code("{if foo}\nbar\n{else}\nfoo{/if}")
     assert r == "{% if foo %}\nbar\n{% else %}\nfoo{% endif %}"

@@ -83,7 +83,7 @@ class TreeWalker(object):
 
     def walk(self, ast):
         # Top level handler for walking the tree.
-        return self.smarty_language(ast)
+        return self.walk_ast(ast)
 
     def visit_ast(self, ast):
         node = Node(node_type(ast), ast)
@@ -92,41 +92,9 @@ class TreeWalker(object):
     def visit_node(self, node):
         return self.visitor.visit(node)
 
-    @visitor('if_statement')
-    def visit(self, ast):
-        return self.if_statement(ast, code="")
-
-    @visitor('content')
-    def visit(self, ast):
-        return self.content(ast, code="")
-
-    @visitor('print_statement')
-    def visit(self, ast):
-        return self.print_statement(ast, code="")
-
-    @visitor('for_statement')
-    def visit(self, ast):
-        return self.for_statement(ast, code="")
-
-    @visitor('function_statement')
-    def visit(self, ast):
-        return self.function_statement(ast, code="")
-
     @visitor('comment')
     def visit(self, ast):
         return "{#%s#}" % ast[2:-2]
-
-    @visitor('literal')
-    def visit(self, ast):
-        return self.literal(ast, code="")
-
-    @visitor('symbol')
-    def visit(self, ast):
-        return self.symbol(ast, code="")
-
-    @visitor('expression')
-    def visit(self, ast):
-        return self.expression(ast, code="")
 
     @visitor('function_parameter')
     def visit(self, ast):
@@ -134,17 +102,9 @@ class TreeWalker(object):
         expression = self.visit(Node.from_dict(ast[1]))
         return (symbol, expression)
 
-    @visitor('modifier_right')
-    def visit(self, ast):
-        return self.modifier_right(ast, code="")
-
     @visitor('exp_no_modifier')
     def visit(self, ast):
-        return self.expression(ast, code="")
-
-    @visitor('array')
-    def visit(self, ast):
-        return self.array(ast, code="")
+        return self.walk_ast(ast)
 
     @visitor('junk')
     def visit(self, ast):
@@ -152,11 +112,12 @@ class TreeWalker(object):
 
     @visitor('smarty_language')
     def visit(self, ast):
-        return self.smarty_language(ast, code="")
-
-    @visitor('operator')
-    def visit(self, ast):
-        return self.operator(ast, code="")
+        """
+        The entry-point for the parser.
+        contains a set of top-level smarty
+        statements.
+        """
+        return self.walk_ast(ast)
 
     @visitor('left_paren')
     def visit(self, ast):
@@ -223,29 +184,28 @@ class TreeWalker(object):
         return ' >= '
 
     def walk_ast(self, ast):
-        return "".join(self.visit(Node.from_dict(el)) for el in ast)
+        def visit_el(el):
+            if isinstance(el, tuple):
+                node = Node.from_dict(el)
+                print 'el', el
+                return self.visit(node)
+            elif isinstance(el, str):
+                return el
+            else:
+                raise Exception()
+        return "".join(visit_el(el) for el in ast)
 
-    def smarty_language(self, ast, code=''):
-        """
-        The entry-point for the parser.
-        contains a set of top-level smarty
-        statements.
-        """
-        return code + self.walk_ast(ast)
-
-    def literal(self, ast, code):
+    @visitor('literal')
+    def visit(self, ast):
         """
         A literal block in smarty, we can just
         drop the {literal} tags because Twig
         is less ambiguous.
         """
-        return "%s%s" % (code, self.visit_node(Node('literal', ast)))
+        return self.visit_node(Node('literal', ast))
 
     @visitor('variable_string')
     def visit(self, ast):
-        return self.variable_string(ast, "")
-
-    def variable_string(self, ast, code):
         """
         A complex string containing variables, e.x.,
 
@@ -253,7 +213,7 @@ class TreeWalker(object):
 
         """
 
-        code = "%s\"" % code
+        code = "\""
 
         # Crawl through the ast snippet and create a
         # string in the format "%s%s%s"
@@ -290,13 +250,15 @@ class TreeWalker(object):
 
         return code
 
-    def function_statement(self, ast, code):
+    @visitor('function_statement')
+    def visit(self, ast):
         """
         Smarty functions are mapped to a modifier in
         Twig with a hash as input.
         """
+        code = ""
+
         # The variable that starts a function statement.
-        # print 'ast', ast
         function_name = self.visit(Node.from_dict(ast[0]))
         # Cycle through the function_parameters and store them
         # these will be passed into the modifier as a dictionary.
@@ -326,7 +288,8 @@ class TreeWalker(object):
         )
         return code
 
-    def print_statement(self, ast, code):
+    @visitor('print_statement')
+    def visit(self, ast):
         """
         A print statement in smarty includes:
 
@@ -340,31 +303,28 @@ class TreeWalker(object):
 
         # Perform any keyword replacements if found.
         if expression in self.keywords:
-            return "%s%s" % (code, self.keywords[expression])
+            return self.keywords[expression]
 
-        return "%s{{ %s }}" % (code, expression)
+        return "{{ %s }}" % expression
 
     @visitor('modifier')
     def visit(self, ast):
-        return self.modifier(ast, "")
-
-    def modifier(self, ast, code):
         """
         A modifier statement:
 
         foo|bar:a:b:c
         """
-        code += self.walk_ast(ast)
-        return code
+        return self.walk_ast(ast)
 
-    def modifier_right(self, ast, code):
+    @visitor('modifier_right')
+    def visit(self, ast):
         """
         The right-hand side of the modifier
         statement:
 
         bar:a:b:c
         """
-        code = "%s|" % code
+        code = "|"
 
         code += self.walk_ast(ast[:1])
 
@@ -372,13 +332,14 @@ class TreeWalker(object):
         # in to the modifier.
         if len(ast) > 1:
             code += "(%s)" % (
-                ", ".join(self.expression(v, "")
-                          for dummy, v in ast[1:])
+                ", ".join(self.walk_ast([node])
+                          for node in ast[1:])
             )
 
         return code
 
-    def content(self, ast, code):
+    @visitor('content')
+    def visit(self, ast):
         """
         Raw content, e.g.,
 
@@ -388,9 +349,10 @@ class TreeWalker(object):
             </body>
         </html>
         """
-        return "%s%s" % (code, ast)
+        return ast
 
-    def for_statement(self, ast, code):
+    @visitor('for_statement')
+    def visit(self, ast):
         """
         A foreach statement in smarty:
 
@@ -399,7 +361,7 @@ class TreeWalker(object):
         {/foreach}
         """
 
-        code = "%s{%% for " % code
+        code = "{% for "
 
         for_parts = {}
         for k, v in ast:
@@ -438,7 +400,8 @@ class TreeWalker(object):
     def visit(self, ast):
         return ""
 
-    def if_statement(self, ast, code):
+    @visitor('if_statement')
+    def visit(self, ast):
         """
         An if statement in smarty:
 
@@ -447,7 +410,8 @@ class TreeWalker(object):
         {else}
         {/if}
         """
-        code += "{% if "
+        code = "{% if "
+        print 'ast', ast
 
         # Walking the expressions in an if statement.
         for node in ast:
@@ -455,8 +419,6 @@ class TreeWalker(object):
                 break
             code += self.walk_ast([node])
             ast = ast[1:]
-        print 'ast', ast
-        # raise
 
         code += " %}"
 
@@ -471,9 +433,6 @@ class TreeWalker(object):
 
     @visitor('elseif_statement')
     def visit(self, ast):
-        return self.elseif_statement(ast, "")
-
-    def elseif_statement(self, ast, code):
         """
         The elseif part of an if statement, essentially
         this is the same as an if statement but without
@@ -481,40 +440,55 @@ class TreeWalker(object):
 
         {elseif expression (operator expression)}
         """
-        return code + "{%% elseif %s %%}%s" % (
+        return "{%% elseif %s %%}%s" % (
             # Walking the expressions in an if statement.
             self.walk_ast(ast[:-1]),
             # The content inside the if statement.
             self.walk_ast(ast[-1:])
         )
 
-    def else_statement(self, ast, code):
+    @visitor('foreachelse_statement')
+    def visit(self, ast):
+        """
+        The foreachelse part of a for loop.
+        """
+        return "{%% else %%}%s" % self.walk_ast(ast)
+
+    @visitor('else_statement')
+    def visit(self, ast):
         """
         The else part of an if statement.
         """
-        return code + "{%% else %%}%s" % self.walk_ast(ast)
+        return "{%% else %%}%s" % self.walk_ast(ast)
 
-    def operator(self, ast, code):
+    @visitor('operator')
+    def visit(self, ast):
         """
         Operators in smarty.
         """
         # Evaluate the different types of expressions.
-        return code + self.walk_ast(ast)
-
-    @visitor('func_param')
-    def visit(self, ast):
         return self.walk_ast(ast)
 
     @visitor('func_params')
     def visit(self, ast):
+        """
+        function parameters in smary:
+        bar1,bar2
+        bar1, bar2
+        """
         return ", ".join(self.walk_ast([node])
                          for node in ast if node_type(node) != 'junk')
 
     @visitor('func_call')
     def visit(self, ast):
-        return "%s%s" % (ast[0], self.walk_ast(ast[1:]))
+        """
+        A function call in smarty:
+        foo(bar)
+        """
+        return "%s%s" % (self.walk_ast(ast[:1]), self.walk_ast(ast[1:]))
 
-    def expression(self, ast, code):
+    @visitor('expression')
+    def visit(self, ast):
         """
         A top level expression in Smarty that statements
         are built out of mostly expressions and/or symbols (which are
@@ -529,15 +503,10 @@ class TreeWalker(object):
                 expression = v
                 break
 
-        code += expression
-
-        return code
+        return expression
 
     @visitor('object_dereference')
     def visit(self, ast):
-        return self.object_dereference(ast, "")
-
-    def object_dereference(self, ast, code):
         """
         An object dereference expression in Smarty:
 
@@ -548,9 +517,6 @@ class TreeWalker(object):
 
     @visitor('array')
     def visit(self, ast):
-        return self.array(ast, "")
-
-    def array(self, ast, code):
         """
         An array expression in Smarty:
 
@@ -561,29 +527,44 @@ class TreeWalker(object):
 
     @visitor('string')
     def visit(self, ast):
-        return self.string(ast, "")
-
-    def string(self, ast, code):
         """
-        A string in Smarty.
+        A string in Smarty:
+        "hello"
         """
-        return "%s%s" % (code, ''.join(ast))
+        return ''.join(ast)
 
-    def symbol(self, ast, code):
+    @visitor('dollar_symbol')
+    def visit(self, ast):
+        """
+        A variable in Smarty:
+        $foo
+        """
+        return self.walk_ast([('symbol', ast)])
+
+    @visitor('identifier')
+    def visit(self, ast):
+        """
+        A identifier in Smarty:
+        foo
+        """
+        return ast
+
+    @visitor('symbol')
+    def visit(self, ast):
         """
         A symbol (variable) in Smarty, e.g,
 
         !foobar
         foo_bar
         foo3
+        $foo
         """
-        variable = ast[-1]
+        variable = self.walk_ast(ast[-1:])
 
         # Is there a ! operator.
-        if ast[0]:
-            if node_type(ast[0]) == 'not_operator':
-                code += "not "
-            elif node_type(ast[0]) == 'at_operator':
-                pass  # Nom nom, at operators are not supported in Twig
+        if node_type(ast[0]) == 'not_operator':
+            variable = "not %s" % variable
+        elif node_type(ast[0]) == 'at_operator':
+            pass  # Nom nom, at operators are not supported in Twig
 
-        return "%s%s" % (code, variable)
+        return variable

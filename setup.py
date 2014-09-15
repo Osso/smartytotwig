@@ -1,7 +1,6 @@
 #!/usr/bin/env python
-#from distutils.core import setup
 from setuptools import setup, find_packages
-import ConfigParser, os
+import ConfigParser
 
 # Read version.conf and use the version #.
 config = ConfigParser.ConfigParser()
@@ -18,9 +17,9 @@ setup(name="smartytotwig",
           ]
       },
       url="git@github.com:freshbooks/smartytotwig.git",
-      packages = find_packages(),
+      packages=find_packages(),
       include_package_data=True,
       setup_requires=['setuptools-git'],
-      install_requires = ['simplejson==2.1.1'],
+      install_requires=['simplejson==2.1.1'],
       tests_require=['nose', 'coverage'],
-)
+      )
