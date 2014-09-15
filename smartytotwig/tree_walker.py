@@ -85,11 +85,11 @@ class TreeWalker(object):
         # Top level handler for walking the tree.
         return self.smarty_language(ast)
 
-    def ast_visit(self, ast):
+    def visit_ast(self, ast):
         node = Node(node_type(ast), ast)
         return self.visitor.visit(node)
 
-    def node_visit(self, node):
+    def visit_node(self, node):
         return self.visitor.visit(node)
 
     @visitor('if_statement')
@@ -239,7 +239,7 @@ class TreeWalker(object):
         drop the {literal} tags because Twig
         is less ambiguous.
         """
-        return "%s%s" % (code, self.node_visit(Node('literal', ast)))
+        return "%s%s" % (code, self.visit_node(Node('literal', ast)))
 
     @visitor('variable_string')
     def visit(self, ast):
@@ -406,53 +406,37 @@ class TreeWalker(object):
             for_parts[k] = v
 
         if 'foreach_array' in for_parts:
-            code2 = self.__walk_tree(
-                {'symbol': self.symbol},
-                [for_parts['foreach_array'][0]],
-                ""
-            )
-            code1 = self.__walk_tree(
-                {'symbol': self.symbol},
-                [for_parts['foreach_array'][1]],
-                ""
-            )
-            code += "%s in %s" % (code1, code2)
+            code += "%s in %s" % (self.walk_ast([for_parts['foreach_array'][1]]),
+                                  self.walk_ast([for_parts['foreach_array'][0]]))
+            ast = ast[1:]
 
         # What variable is the for data being stored as.
         if 'for_item' in for_parts:
-            code = self.__walk_tree(
-                {'symbol': self.symbol},
-                for_parts['for_item'],
-                code
-            )
-            code = "%s " % code
+            code += "%s " % self.walk_ast(for_parts['for_item'])
+            ast = ast[1:]
 
         # What is the for statement reading from?
         if 'for_from' in for_parts:
-            code = "%sin " % code
-            code = self.__walk_tree(
-                {'expression': self.expression},
-                for_parts['for_from'],
-                code
-            )
+            code += "in %s" % self.walk_ast(for_parts['for_from'])
+            ast = ast[1:]
+
+        if 'for_key' in for_parts:
+            ast = ast[1:]
+
+        if 'for_name' in for_parts:
+            ast = ast[1:]
 
         code = "%s %%}" % code
 
         # The content inside the if statement.
-        code = self.__walk_tree(
-            {'smarty_language': self.smarty_language},
-            ast,
-            code
-        )
-
         # Else and elseif statements.
-        code = self.__walk_tree(
-            {'foreachelse_statement': self.else_statement},
-            ast,
-            code
-        )
+        code += self.walk_ast(ast)
 
         return '%s{%% endfor %%}' % code
+
+    @visitor('junk')
+    def visit(self, ast):
+        return ""
 
     def if_statement(self, ast, code):
         """
@@ -466,38 +450,28 @@ class TreeWalker(object):
         code += "{% if "
 
         # Walking the expressions in an if statement.
-        code = self.__walk_tree(
-            {
-                'expression': self.expression,
-                'operator': self.operator,
-                'right_paren': None,
-                'left_paren': None
-            },
-            ast,
-            code
-        )
+        for node in ast:
+            if node_type(node) == 'smarty_language':
+                break
+            code += self.walk_ast([node])
+            ast = ast[1:]
+        print 'ast', ast
+        # raise
 
         code += " %}"
 
         # The content inside the if statement.
-        code = self.__walk_tree(
-            {'smarty_language': self.smarty_language},
-            ast,
-            code
-        )
+        code += self.walk_ast([ast[0]])
 
         # Else and elseif statements.
-        code = self.__walk_tree(
-            {
-                'elseif_statement': self.elseif_statement,
-                'else_statement': self.else_statement
-            },
-            ast,
-            code
-        )
+        code += self.walk_ast(ast[1:])
 
         code += '{% endif %}'
         return code
+
+    @visitor('elseif_statement')
+    def visit(self, ast):
+        return self.elseif_statement(ast, "")
 
     def elseif_statement(self, ast, code):
         """
@@ -613,21 +587,3 @@ class TreeWalker(object):
                 pass  # Nom nom, at operators are not supported in Twig
 
         return "%s%s" % (code, variable)
-
-    def __walk_tree(self, handlers, ast, code):
-        """
-        Tree walking helper function.
-        """
-        for k, v in ast:
-            if k in handlers:
-                if k == 'right_paren':
-                    code += ")"
-                elif k == 'left_paren':
-                    code += "("
-                elif k == 'comment':
-                    # Comments in Twig have {# not {*
-                    code += "{#%s#}" % v[2:-2]
-                else:
-                    code = handlers[k](v, code)
-
-        return code
