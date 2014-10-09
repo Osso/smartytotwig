@@ -242,3 +242,5 @@ def test_comment():
 def test_literal():
     r = convert_code("{literal}{foo}{/literal}")
     assert r == '{foo}'
+
+#TODO: test foreachelse etc
