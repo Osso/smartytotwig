@@ -5,18 +5,32 @@ grammar more sane.
 """
 import smartytotwig
 
-from smartytotwig.tree_walker import TreeWalker
 from smartytotwig.twig_printer import TwigPrinter
 
 
 def convert_code(smarty_code):
     ast = smartytotwig.parse_string(smarty_code)
-    tree_walker = TreeWalker(TwigPrinter())
-    return tree_walker.walk(ast)
+    print 'ast', ast
+    return ast.accept(TwigPrinter())
 
 
 def test_print_symbol():
     r = convert_code("{$foo}")
+    assert r == "{{ foo }}"
+
+
+def test_print_symbol_no_filter():
+    r = convert_code("{$foo nofilter}")
+    assert r == '{{ "%s"|format(foo) }}'
+
+
+def test_whitespace_before():
+    r = convert_code("{   $foo}")
+    assert r == "{{ foo }}"
+
+
+def test_print_whitespace_after():
+    r = convert_code("{$foo   }")
     assert r == "{{ foo }}"
 
 
@@ -30,110 +44,172 @@ def test_print_func_array():
     assert r == "{{ foo|bar(param1['hello']) }}"
 
 
-def test_print_string():
+def test_print_func_array_num():
+    r = convert_code("{foo|bar:param1[4]}")
+    assert r == "{{ foo|bar(param1[4]) }}"
+
+
+def test_print_single_quoted_string():
     r = convert_code("{'foo'}")
     assert r == "{{ 'foo' }}"
 
 
-def test_print_string2():
+def test_print_double_quoted_string():
     r = convert_code('{"foo"}')
     assert r == '{{ "foo" }}'
 
 
-def test_print_variable_string():
+def test_print_double_quoted_string_no_filter():
+    r = convert_code('{"foo" nofilter}')
+    assert r == '{{ "%s"|format("foo") }}'
+
+
+def test_print_variable_double_quoted_string():
     r = convert_code('{"$foo"}')
-    assert r == '{{ "%s"|format(foo) }}'
+    assert r == '{{ "${foo}" }}'
 
 
-def test_object_dereference():
+def test_print_variable_double_quoted_string_no_filter():
+    r = convert_code('{"$foo" nofilter}')
+    assert r == '{{ "%s"|format("${foo}") }}'
+
+
+def test_print_variable_single_quoted_string():
+    r = convert_code("{'$foo'}")
+    assert r == "{{ '$foo' }}"
+
+
+def test_print_object_dereference():
+    r = convert_code('{$foo->hello}')
+    assert r == '{{ foo.hello }}'
+
+
+def test_print_object_dereference_2():
+    r = convert_code('{$foo.hello}')
+    assert r == '{{ foo.hello }}'
+
+
+def test_print_object_dereference_variables():
+    r = convert_code('{$foo.$hello}')
+    assert r == '{{ foo.hello }}'
+
+
+def test_print_object_dereference_method():
+    r = convert_code('{$foo.hello()}')
+    assert r == '{{ foo.hello() }}'
+
+
+def test_print_object_dereference_composed():
+    r = convert_code('{$foo.bar.hello}')
+    assert r == '{{ foo.bar.hello }}'
+
+
+def test_print_object_dereference_composed_variables():
+    r = convert_code('{$foo.$bar.$hello}')
+    assert r == '{{ foo.bar.hello }}'
+
+
+def test_print_string_object_dereference():
     r = convert_code('{"$foo->hello"}')
-    assert r == '{{ "%s"|format(foo.hello) }}'
+    assert r == '{{ "${foo.hello}" }}'
 
 
-def test_object_dereference2():
+def test_print_string_object_dereference_2():
     r = convert_code('{"$foo.hello"}')
-    assert r == '{{ "%s"|format(foo.hello) }}'
+    assert r == '{{ "${foo.hello}" }}'
 
 
 def test_if_statement():
-    r = convert_code(
-        "{if foo}\nhello\n{/if}")
+    r = convert_code("{if foo}\nhello\n{/if}")
     assert r == "{% if foo %}\nhello\n{% endif %}"
 
 
+def test_if_not_statement():
+    r = convert_code("{if !foo}\nhello\n{/if}")
+    assert r == "{% if not foo %}\nhello\n{% endif %}"
+
+
 def test_if_and_statement():
-    r = convert_code(
-        "{if foo and bar}\nhello\n{/if}")
+    r = convert_code("{if foo and bar}\nhello\n{/if}")
     assert r == "{% if foo and bar %}\nhello\n{% endif %}"
 
 
 def test_if_or_statement():
-    r = convert_code(
-        "{if foo or bar}\nhello\n{/if}")
+    r = convert_code("{if foo or bar}\nhello\n{/if}")
     assert r == "{% if foo or bar %}\nhello\n{% endif %}"
 
 
 def test_if_equal_statement():
-    r = convert_code(
-        "{if foo == bar}\nhello\n{/if}")
+    r = convert_code("{if foo == bar}\nhello\n{/if}")
     assert r == "{% if foo == bar %}\nhello\n{% endif %}"
 
 
 def test_if_not_equal_statement():
-    r = convert_code(
-        "{if foo != bar}\nhello\n{/if}")
+    r = convert_code("{if foo != bar}\nhello\n{/if}")
     assert r == "{% if foo != bar %}\nhello\n{% endif %}"
 
 
 def test_if_lower_statement():
-    r = convert_code(
-        "{if foo < bar}\nhello\n{/if}")
+    r = convert_code("{if foo < bar}\nhello\n{/if}")
     assert r == "{% if foo < bar %}\nhello\n{% endif %}"
 
 
 def test_if_lower_or_equal_statement():
-    r = convert_code(
-        "{if foo <= bar}\nhello\n{/if}")
+    r = convert_code("{if foo <= bar}\nhello\n{/if}")
     assert r == "{% if foo <= bar %}\nhello\n{% endif %}"
 
 
 def test_if_greater_statement():
-    r = convert_code(
-        "{if foo > bar}\nhello\n{/if}")
+    r = convert_code("{if foo > bar}\nhello\n{/if}")
     assert r == "{% if foo > bar %}\nhello\n{% endif %}"
 
 
 def test_if_greater_or_equal_statement():
-    r = convert_code(
-        "{if foo >= bar}\nhello\n{/if}")
+    r = convert_code("{if foo >= bar}\nhello\n{/if}")
     assert r == "{% if foo >= bar %}\nhello\n{% endif %}"
 
 
 def test_if_func_statement():
-    r = convert_code(
-        "{if foo(bar)}\nhello\n{/if}")
+    r = convert_code("{if foo($bar)}\nhello\n{/if}")
     assert r == "{% if foo(bar) %}\nhello\n{% endif %}"
 
 
 def test_if_func_no_param_statement():
-    r = convert_code(
-        "{if foo()}\nhello\n{/if}")
+    r = convert_code("{if foo()}\nhello\n{/if}")
     assert r == "{% if foo() %}\nhello\n{% endif %}"
 
 
+def test_if_variable_dereference():
+    r = convert_code("{if foo.bar}\nhello\n{/if}")
+    assert r == "{% if foo.bar %}\nhello\n{% endif %}"
+
+
+def test_if_variable_dereference_2():
+    r = convert_code("{if foo->bar}\nhello\n{/if}")
+    assert r == "{% if foo.bar %}\nhello\n{% endif %}"
+
+
+def test_if_array():
+    r = convert_code("{if foo['bar']}\nhello\n{/if}")
+    assert r == "{% if foo['bar'] %}\nhello\n{% endif %}"
+
+
+def test_if_filter():
+    r = convert_code("{if foo|bar}\nhello\n{/if}")
+    assert r == "{% if foo|bar %}\nhello\n{% endif %}"
+
+
 def test_if_func_multiple_params_statement():
-    r = convert_code(
-        "{if foo(bar1, bar2)}\nhello\n{/if}")
+    r = convert_code("{if foo($bar1, $bar2)}\nhello\n{/if}")
     assert r == "{% if foo(bar1, bar2) %}\nhello\n{% endif %}"
 
 
 def test_if_func_var_params_statement():
-    r = convert_code(
-        "{if foo($bar1, $bar2)}\nhello\n{/if}")
+    r = convert_code("{if foo($bar1, $bar2)}\nhello\n{/if}")
     assert r == "{% if foo(bar1, bar2) %}\nhello\n{% endif %}"
 
 
-def test_if_statement1():
+def test_if_statement_multiple():
     """Test an if statement (no else or elseif)"""
     r = convert_code(
         "{if !foo or foo.bar or foo|bar:foo['hello']}\nfoo\n{/if}")
@@ -146,28 +222,60 @@ def test_if_else_statement():
     assert r == "{% if foo %}\nbar\n{% else %}\nfoo{% endif %}"
 
 
-def test_if_statement3():
+def test_if_elseif_statement():
+    """Test an an if with an elseif."""
+    r = convert_code(
+        "{if foo}\nbar\n{elseif blue}\nfoo{/if}")
+    assert r == "{% if foo %}\nbar\n{% elseif blue %}\nfoo{% endif %}"
+
+
+def test_if_filter_statement():
     """Test an an if with an else and an elseif and two logical operations."""
     r = convert_code(
-        "{if foo and awesome.string|banana:\"foo\\\" $a\"}\nbar\n{elseif awesome.sauce[1] and blue and 'hello'}\nfoo{/if}")
-    assert r == "{% if foo and awesome.string|banana(\"foo\\\" %s\"|format(a)) %}\nbar\n{% elseif awesome.sauce[1] and blue and 'hello' %}\nfoo{% endif %}"
+        "{if awesome.string|banana:\"foo\\\" $a\"}\nbar\n{/if}")
+    assert r == "{% if awesome.string|banana(\"foo\\\" ${a}\") %}\nbar\n{% endif %}"
 
 
-def test_if_statement4():
+def test_if_and_filter_statement():
+    """Test an an if with an else and an elseif and two logical operations."""
+    r = convert_code(
+        "{if foo and awesome.string|banana:\"foo\\\" $a\"}\nbar\n{/if}")
+    assert r == "{% if foo and awesome.string|banana(\"foo\\\" ${a}\") %}\nbar\n{% endif %}"
+
+
+def test_if_string_statement():
+    """Test an an if with an else and an elseif and two logical operations."""
+    r = convert_code(
+        "{if 'hello'}\nbar\n{/if}")
+    assert r == "{% if 'hello' %}\nbar\n{% endif %}"
+
+def test_if_elseif_and_statement():
+    """Test an an if with an else and an elseif and two logical operations."""
+    r = convert_code(
+        "{if foo}\nbar\n{elseif awesome.sauce[1] and blue and 'hello'}\nfoo{/if}")
+    assert r == "{% if foo %}\nbar\n{% elseif awesome.sauce[1] and blue and 'hello' %}\nfoo{% endif %}"
+
+def test_if_not_array_statement():
+    r = convert_code(
+        "{if !foo[3]}\nbar\n{/if}")
+    assert r == "{% if not foo[3] %}\nbar\n{% endif %}"
+
+
+def test_if_elseif_else_statement():
     """Test an if with an elseif and else clause."""
     r = convert_code(
-        "{if foo|bar:3 or !foo[3]}\nbar\n{elseif awesome.sauce[1] and blue and 'hello'}\nfoo\n{else}bar{/if}")
-    assert r == "{% if foo|bar(3) or not foo[3] %}\nbar\n{% elseif awesome.sauce[1] and blue and 'hello' %}\nfoo\n{% else %}bar{% endif %}"
+        "{if foo}\nbar\n{elseif blue}\nfoo\n{else}bar{/if}")
+    assert r == "{% if foo %}\nbar\n{% elseif blue %}\nfoo\n{% else %}bar{% endif %}"
 
 
-def test_if_statement5():
+def test_if_paren_statement():
     """Test an an if statement with parenthesis."""
     r = convert_code(
         "{if (foo and bar) or foo and (bar or (foo and bar))}\nbar\n{else}\nfoo{/if}")
     assert r == "{% if (foo and bar) or foo and (bar or (foo and bar)) %}\nbar\n{% else %}\nfoo{% endif %}"
 
 
-def test_if_statement6():
+def test_if_elseif_paren_statement():
     """Test an an elseif statement with parenthesis."""
     r = convert_code(
         "{if foo}\nbar\n{elseif (foo and bar) or foo and (bar or (foo and bar))}\nfoo{/if}")
@@ -187,46 +295,52 @@ def test_function_statement2():
     assert r == "{{ ['arg1': bar[1], 'arg2': foo.bar.foo, 'arg3': foo.bar[3], 'arg4': foo.bar.awesome[3]]|foo }}"
 
 
+def test_function_statement_at_operator():
+    """Test a a simple function statement."""
+    r = convert_code("{@foo arg1=bar arg2=3}")
+    assert r == "{{ ['arg1': bar, 'arg2': 3]|foo }}"
+
+
 def test_function_statement3():
     """Test a function statement with modifiers in in the parameters."""
     r = convert_code(
         "{foo arg1=bar[1]|modifier arg2=foo.bar.foo arg3=foo.bar[3]|modifier:array[0]:\"hello $foo \" arg4=foo.bar.awesome[3]|modifier2:7:'hello':\"hello\":\"`$apple.banana`\"}")
-    assert r == "{{ [\'arg1\': bar[1]|modifier, \'arg2\': foo.bar.foo, \'arg3\': foo.bar[3]|modifier(array[0], \"hello %s \"|format(foo)), \'arg4\': foo.bar.awesome[3]|modifier2(7, \'hello\', \"hello\", \"%s\"|format(apple.banana))]|foo }}"
+    assert r == "{{ [\'arg1\': bar[1]|modifier, \'arg2\': foo.bar.foo, \'arg3\': foo.bar[3]|modifier(array[0], \"hello ${foo} \"), \'arg4\': foo.bar.awesome[3]|modifier2(7, \'hello\', \"hello\", \"${apple.banana}\")]|foo }}"
 
 
 def test_for_statement():
     """Test a a simple foreach statement."""
     r = convert_code(
-        "{foreach $foo as $bar}{/foreach}")
-    assert r == "{% for bar in foo %}{% endfor %}"
+        "{foreach $foo as $bar}content{/foreach}")
+    assert r == "{% for bar in foo %}content{% endfor %}"
 
 
 def test_old_for_statement():
     """Test a a simple foreach statement."""
     r = convert_code(
-        "{foreach item=bar from=foo}{/foreach}")
-    assert r == "{% for bar in foo %}{% endfor %}"
+        "{foreach item=bar from=foo}content{/foreach}")
+    assert r == "{% for bar in foo %}content{% endfor %}"
 
 
-def test_old_for_statement1():
+def test_old_for_statement_whitespace():
     """Test a a simple foreach statement."""
     r = convert_code(
-        "{foreach item=bar from=foo }{/foreach}")
-    assert r == "{% for bar in foo %}{% endfor %}"
+        "{foreach item=bar from=foo }content{/foreach}")
+    assert r == "{% for bar in foo %}content{% endfor %}"
 
 
-def test_old_for_statement2():
+def test_old_for_statement_name():
     """Test a more complex foreach statement."""
     r = convert_code(
         "{foreach item='bar'    name=snuh key=\"foobar\" from=foo[5].bar[2]|hello:\"world\":\" $hey \" }bar{/foreach}")
-    assert r == "{% for bar in foo[5].bar[2]|hello(\"world\", \" %s \"|format(hey)) %}bar{% endfor %}"
+    assert r == "{% for bar in foo[5].bar[2]|hello(\"world\", \" ${hey} \") %}bar{% endfor %}"
 
 
-def test_old_for_statement3():
+def test_old_for_statement_foreachelse():
     """Test a for statement with a foreachelse clause."""
     r = convert_code(
-        "{foreach item='bar'    name=snuh key=\"foobar\" from=foo.bar[2]|hello:\"world\":\" $hey \" }bar{foreachelse}{if !foo}bar{/if}hello{/foreach}")
-    assert r == "{% for bar in foo.bar[2]|hello(\"world\", \" %s \"|format(hey)) %}bar{% else %}{% if not foo %}bar{% endif %}hello{% endfor %}"
+        "{foreach item='bar' name=snuh key=\"foobar\" from=foo.bar[2]|hello:\"world\":\" $hey \" }bar{foreachelse}{if !foo}bar{/if}hello{/foreach}")
+    assert r == "{% for bar in foo.bar[2]|hello(\"world\", \" ${hey} \") %}bar{% else %}{% if not foo %}bar{% endif %}hello{% endfor %}"
 
 
 def test_content():
@@ -243,4 +357,7 @@ def test_literal():
     r = convert_code("{literal}{foo}{/literal}")
     assert r == '{foo}'
 
-#TODO: test foreachelse etc
+
+# def test_empty():
+#     r = convert_code("")
+#     assert r == ''

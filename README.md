@@ -10,7 +10,6 @@ This is based on https://github.com/freshrichard/smartytotwig
 
 ### Installation
 
-
 _python setup.py install_
 
 ### Usage:

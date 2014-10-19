@@ -1,113 +1,323 @@
-# pylint: disable=C0321
+# pylint: disable=R0903
+
+from __future__ import unicode_literals, print_function
 
 import re
 
-from smartytotwig.pyPEG import keyword
+from pypeg2 import Keyword, maybe_some, some, optional, Literal, omit
+
+
+class Rule(object):
+
+    def __init__(self, args):
+        self.children = args
+
+    def accept(self, visitor):
+        return visitor.visit(self, *[arg.accept(visitor) for arg in self.children])
+
+    def __eq__(self, other):
+        return type(self) == type(other) and self.children == other.args
+
+    def __repr__(self):
+        return "%s(%s)" % (self.__class__.__name__, repr(self.children))
+
+
+class UnaryRule(object):
+
+    def __init__(self, child):
+        self.child = child
+
+    def accept(self, visitor):
+        return visitor.visit(self, self.child.accept(visitor))
+
+    def __eq__(self, other):
+        return type(self) == type(other) and self.child == other.child
+
+    def __repr__(self):
+        return "%s(%s)" % (self.__class__.__name__, repr(self.child))
+
+
+class LeafRule(object):
+
+    def __init__(self, value):
+        self.value = value
+
+    def accept(self, visitor):
+        return visitor.visit(self, self.value)
+
+    def __eq__(self, other):
+        return type(self) == type(other) and self.value == other.value
+
+    def __repr__(self):
+        return '%s(%s)' % (self.__class__.__name__, repr(self.value))
+
+
+class EmptyLeafRule(object):
+
+    def accept(self, visitor):
+        return visitor.visit(self)
+
+    def __eq__(self, other):
+        return type(self) == type(other)
+
+    def __repr__(self):
+        return '%s' % self.__class__.__name__
 
 """
 Misc.
 """
-def content():              return re.compile(r'[^{]+')
 
-def comment():              return re.compile(r"{\*.*?\*}", re.S)
+class Content(LeafRule):
+    grammar = re.compile(r'[^{]+')
 
-def literal():              return re.compile("{literal}.*?{/literal}", re.S)
 
-def junk():                 return -1, [' ', '\n', '\t']
+class CommentStatement(LeafRule):
+    grammar = re.compile(r"{\*.*?\*}", re.S)
+
+
+class LiteralStatement(LeafRule):
+    grammar = re.compile("{literal}.*?{/literal}", re.S)
+
+
+class Whitespace(object):
+    grammar = maybe_some([Literal(' '), Literal('\n'), Literal('\t')])
+
+
+_ = omit(Whitespace)
+
+
+class Identifier(LeafRule):
+    grammar = re.compile(r'[\w\-\+]*\w')
+
 
 """
-Logical operators.
+Logical Operators.
 """
-def and_operator():         return [keyword('and'), '&&']
 
-def or_operator():          return [keyword('or'), '||']
+class AndOperator(EmptyLeafRule):
+    grammar = [Literal('and'), Literal('&&')]
 
-def equals_operator():      return ['==', keyword('eq')]
 
-def ne_operator():          return ['!=', keyword('ne'), keyword('neq')]
+class OrOperator(EmptyLeafRule):
+    grammar = [Literal('or'), Literal('||')]
 
-def gt_operator():          return ['>', 'gt']
 
-def lt_operator():          return ['<', 'gt']
+class EqOperator(EmptyLeafRule):
+    grammar = [Literal('=='), Literal('eq')]
 
-def lte_operator():         return ['<=']
 
-def gte_operator():         return ['>=']
+class NeOperator(EmptyLeafRule):
+    grammar = [Literal('!='), Literal('ne'), Literal('neq')]
 
-def right_paren():          return junk, ')'
 
-def left_paren():           return junk, '('
+class GtOperator(EmptyLeafRule):
+    grammar = [Literal('>'), Literal('gt')]
 
-def operator():             return 0, ' ', [and_operator, equals_operator, gte_operator, lte_operator, lt_operator, gt_operator, ne_operator, or_operator]
+
+class LtOperator(EmptyLeafRule):
+    grammar = [Literal('<'), Literal('lt')]
+
+
+class LteOperator(EmptyLeafRule):
+    grammar = Literal('<=')
+
+
+class GteOperator(EmptyLeafRule):
+    grammar = Literal('>=')
+
+
+class RightParen(EmptyLeafRule):
+    grammar = Literal(')')
+
+
+class LeftParen(EmptyLeafRule):
+    grammar = Literal('(')
+
+
+class Operator(UnaryRule):
+    grammar = [AndOperator, EqOperator, GteOperator, LteOperator,
+               LtOperator, GtOperator, NeOperator, OrOperator]
 
 """
 Smarty variables.
 """
-def string():               return 0, ' ', [(re.compile(r'"'), -1, [re.compile(r'[^$`"\\]'), re.compile(r'\\.')], re.compile(r'"')), (re.compile(r'\''), -1, [re.compile(r'[^\'\\]'), re.compile(r'\\.')], re.compile(r'\''))]
 
-def text():                 return -2, [re.compile(r'[^$`"\\]'), re.compile(r'\\.')]
 
-def variable_string():      return '"', -2, [text, ('`', expression, '`'), ('$', expression)], '"'
+class SingleQuotedString(LeafRule):
+    grammar = "'", re.compile(r"([^']|\\.)*"), "'"
 
-def dollar():               return '$'
 
-def not_operator():         return '!'
+class DoubleQuotedString(LeafRule):
+    grammar = '"', re.compile(r'([^"\$]|\\.)*'), '"'
 
-def at_operator():          return '@'
 
-def symbol():               return -1, [' ', '\n', '\t'], 0, [not_operator, at_operator], 0, dollar, identifier
+class String(UnaryRule):
+    grammar = [SingleQuotedString, DoubleQuotedString]
 
-def dollar_symbol():               return -1, [' ', '\n', '\t'], 0, [not_operator, at_operator], dollar, identifier
 
-def array():                return symbol, "[", 0, expression, "]"
+class Text(LeafRule):
+    grammar = some([re.compile(r'[^$`"\\]+'), re.compile(r'\\.')])
 
-def modifier():             return [object_dereference, array, symbol, variable_string, string], -2, modifier_right, 0, ' '
 
-def identifier():           return re.compile(r'[\w\-\+]*\w')
+class NotOperator(EmptyLeafRule):
+    grammar = Literal('!')
 
-def func_call():            return identifier, left_paren, 0, func_params, right_paren
 
-def func_params():          return expression, -1, (',', junk, expression)
+class AtOperator(EmptyLeafRule):
+    grammar = Literal('@')
 
-def expression():           return [func_call, modifier, object_dereference, array, symbol, string, variable_string]
+class EmptyOperator(EmptyLeafRule):
+    grammar = Literal('')
 
-def object_dereference():   return [array, symbol], ['.', '->'], expression
+class Variable(UnaryRule):
+    grammar = Literal('$'), Identifier
 
-def exp_no_modifier():      return [object_dereference, array, symbol, variable_string, string]
+class Symbol(Rule):
+    grammar = ([NotOperator, AtOperator, EmptyOperator],
+               [Variable, Identifier])
 
-def modifier_right():       return ('|', symbol, -1, (':', exp_no_modifier),)
+
+class DollarSymbol(Rule):
+    grammar = [NotOperator, AtOperator, EmptyOperator], Variable
+
+
+class Expression(UnaryRule):
+    pass
+
+
+class Array(Rule):
+    grammar = Symbol, "[", optional(Expression), "]"
+
+
+class ObjectDereference(Rule):
+    grammar = [Array, Symbol], ['.', '->'], Expression
+
+
+class VariableString(Rule):
+    grammar = '"', some([Text, ('`', Expression, '`'), ('$', Expression)]), '"'
+
+
+class ExpNoModifier(UnaryRule):
+    grammar = Literal(':'), [ObjectDereference, Array, Symbol, VariableString, String]
+
+class ModifierParameters(Rule):
+    grammar = some(ExpNoModifier)
+
+class ModifierElement(Rule):
+    grammar = ('|',
+               [AtOperator, EmptyOperator],
+               Identifier,
+               optional(ModifierParameters))
+
+class ModifierRight(Rule):
+    grammar = some(ModifierElement)
+
+
+class Modifier(Rule):
+    grammar = [ObjectDereference, Array, Symbol,
+               VariableString, String], ModifierRight
+
+
+class FuncParams(Rule):
+    grammar = Expression, some((',', _, Expression))
+
+
+class FuncCall(Rule):
+    grammar = Identifier, omit(LeftParen), optional([FuncParams, Expression]), omit(RightParen)
+
+
+Expression.grammar = [FuncCall, Modifier, ObjectDereference,
+                      Array, Symbol, String, VariableString]
+
 
 """
-Smarty statements.
+Smarty Statements.
 """
-def else_statement():       return '{', keyword('else'), '}', -1, smarty_language
 
-def foreachelse_statement():return '{', keyword('foreachelse'), '}', -1, smarty_language
+class SmartyLanguage(Rule):
+    pass
 
-def print_statement():      return '{', 0, 'e ', [func_call, modifier, object_dereference, array, dollar_symbol, string, variable_string], 0, ' nofilter', '}'
 
-def function_parameter():   return symbol, '=', expression, junk
+class ElseStatement(UnaryRule):
+    grammar = '{', Keyword('else'), '}', SmartyLanguage
 
-def function_statement():   return '{', symbol, -2, function_parameter, '}'
 
-def for_from():             return junk, keyword('from'), '=', 0, ['"', '\''], expression, 0, ['"', '\''], junk
+class ForeachelseStatement(UnaryRule):
+    grammar = '{', Keyword('foreachelse'), '}', SmartyLanguage
 
-def for_item():             return junk, keyword('item'), '=', 0, ['"', '\''], symbol, 0, ['"', '\''], junk
 
-def for_name():             return junk, keyword('name'), '=', 0, ['"', '\''], symbol, 0, ['"', '\''], junk
+class NoFilter(EmptyLeafRule):
+    grammar = Literal('nofilter')
 
-def for_key():              return junk, keyword('key'), '=', 0, ['"', '\''], symbol, 0, ['"', '\''], junk
+class PrintStatement(Rule):
+    grammar = ('{', _,
+               optional('e '),
+               [FuncCall, Modifier, ObjectDereference,
+                Array, DollarSymbol, String, VariableString],
+               optional(_, NoFilter),
+               _, '}')
 
-def elseif_statement():     return '{', keyword('elseif'), -1, left_paren, expression, -1, right_paren, -1, (operator, -1, left_paren, expression, -1, right_paren), '}', -1, smarty_language
 
-def if_statement():         return ('{', keyword('if'), junk, -1, left_paren, expression, -1, right_paren, -1, (operator, junk, -1, left_paren, expression, -1, right_paren), '}',
-                                   -1, smarty_language, -1, [else_statement, elseif_statement], '{/', keyword('if'), '}')
+class FunctionParameter(Rule):
+    grammar = Symbol, '=', Expression
 
-def foreach_array():        return symbol, ' as ', symbol
 
-def for_statement():        return '{', keyword('foreach'), -1, [for_from, for_item, for_name, for_key, foreach_array], '}', -1, smarty_language, 0, foreachelse_statement, '{/', keyword('foreach'), '}'
+class FunctionStatement(Rule):
+    grammar = '{', _, Symbol, some(_, FunctionParameter), _, '}'
+
+
+class ForFrom(UnaryRule):
+    grammar = Keyword('from'), '=', omit(optional(['"', '\''])), Expression, omit(optional(['"', '\'']))
+
+
+class ForItem(UnaryRule):
+    grammar = Keyword('item'), '=', omit(optional(['"', '\''])), Symbol, omit(optional(['"', '\'']))
+
+
+class ForName(UnaryRule):
+    grammar = Keyword('name'), '=', omit(optional(['"', '\''])), Symbol, omit(optional(['"', '\'']))
+
+
+class ForKey(UnaryRule):
+    grammar = Keyword('key'), '=', omit(optional(['"', '\''])), Symbol, omit(optional(['"', '\'']))
+
+
+class IfCondition(Rule):
+    grammar = maybe_some(LeftParen), _, Expression, _, maybe_some(RightParen)
+
+
+class IfConditionList(Rule):
+    grammar = IfCondition, some(_, Operator, _, IfCondition)
+
+
+class ElseifStatement(Rule):
+    grammar = ('{', Keyword('elseif'), _, [IfConditionList, IfCondition], _, '}', SmartyLanguage)
+
+
+class IfMoreStatement(Rule):
+    grammar = some([ElseStatement, ElseifStatement])
+
+
+class IfStatement(Rule):
+    grammar = ('{', _, Keyword('if'), _, [IfConditionList, IfCondition], _, '}',
+               SmartyLanguage, optional(IfMoreStatement), '{/', Keyword('if'), '}')
+
+
+class ForeachArray(Rule):
+    grammar = _, Symbol, _, 'as', _, Symbol
+
+
+class ForeachParameters(Rule):
+    grammar = some(_, [ForFrom, ForItem, ForName, ForKey])
+
+class ForStatement(Rule):
+    grammar = ('{', _, Keyword('foreach'), [ForeachParameters, ForeachArray], _, '}',
+               SmartyLanguage, optional(ForeachelseStatement),
+               '{/', Keyword('foreach'), '}')
 
 """
 Finally, the actual language description.
 """
-def smarty_language():      return -2, [literal, if_statement, for_statement, function_statement, comment, print_statement, content]
+
+SmartyLanguage.grammar = some([LiteralStatement, IfStatement, ForStatement,
+                    FunctionStatement, CommentStatement, PrintStatement, Content])
