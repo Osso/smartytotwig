@@ -3,13 +3,12 @@ It's easy to screw up other rules when modifying the underlying grammar.
 These unit tests test various smarty statements, to make refactoring the
 grammar more sane.
 """
-import smartytotwig
-
+from smartytotwig import parse_string
 from smartytotwig.twig_printer import TwigPrinter
 
 
 def convert_code(smarty_code):
-    ast = smartytotwig.parse_string(smarty_code)
+    ast = parse_string(smarty_code)
     print 'ast', ast
     return ast.accept(TwigPrinter())
 

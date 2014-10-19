@@ -1,8 +1,8 @@
 import optparse
 import sys
-import smartytotwig
 
-from smartytotwig.tree_walker import TreeWalker
+from . import parse_file
+from .twig_printer import TwigPrinter
 
 
 def main():
@@ -50,13 +50,10 @@ def main():
 
     if options.source and options.target:
 
-        ast = smartytotwig.parse_file(options.source)
-        tree_walker = TreeWalker(ast,
-                                 twig_path=options.path,
-                                 twig_extension=options.extension)
-
+        ast = parse_file(options.source)
+        out = ast.accept(TwigPrinter())
         with open(options.target, 'w+') as f:
-            f.write(tree_walker.code)
+            f.write(out)
 
         print 'Template outputted to %s' % options.target
 

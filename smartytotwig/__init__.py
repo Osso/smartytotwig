@@ -8,8 +8,8 @@ def parse_file(file_name, language=SmartyLanguage):
     """
     Parse a smarty template file.
     """
-    file_input = fileinput.FileInput(file_name)
-    return pypeg2.parse(file_input, language, whitespace="")
+    with open(file_name) as f:
+        return pypeg2.parse(f.read(), language, whitespace="")
 
 
 def parse_string(text, language=SmartyLanguage):
