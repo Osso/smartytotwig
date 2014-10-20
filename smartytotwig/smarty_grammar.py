@@ -363,7 +363,7 @@ class IsLink(LeafRule):
 
 class TranslationStatement(Rule):
     grammar = ('{', _, Keyword('t'), _,
-               Literal('id='), DoubleQuotedString,
+               Literal('id='), Expression,
                optional(_, IsLink),
                _, '}')
 

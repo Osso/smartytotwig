@@ -412,6 +412,11 @@ def test_translation():
     assert r == '{% t "hello" %}'
 
 
+def test_translation_variable():
+    r = convert_code('{t id=$hello}')
+    assert r == '{% t hello %}'
+
+
 def test_translation_islink():
     r = convert_code('{t id="hello" quoted=true}')
     assert r == '{% t "hello" islink %}'
