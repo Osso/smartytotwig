@@ -23,7 +23,7 @@ from .smarty_grammar import (SmartyLanguage, DollarSymbol, PrintStatement,
                              ForExpression, AddOperator, SubOperator,
                              MultOperator, DivOperator, ArithmeticOperator,
                              Number, ForVariableIdentifier, IncludeStatement,
-                             IsLink, AssignStatement, IsOperator)
+                             IsLink, AssignStatement, IsOperator, SimpleTag)
 
 
 class TwigPrinter(object):
@@ -479,5 +479,9 @@ class TwigPrinter(object):
     @visitor(AssignStatement)
     def visit(self, node, var, value):
         return "{%% set %s = %s %%}" % (var, value)
+
+    @visitor(SimpleTag)
+    def visit(self, node, value):
+        return "{{ %s() }}" % value
 
     # pylint: enable=W0612,E0102

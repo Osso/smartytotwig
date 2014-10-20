@@ -227,7 +227,7 @@ class FuncParams(Rule):
 
 
 class FuncCall(Rule):
-    grammar = Identifier, optional(omit(LeftParen), optional([FuncParams, Expression]), omit(RightParen))
+    grammar = Identifier, omit(LeftParen), optional([FuncParams, Expression]), omit(RightParen)
 
 
 Expression.grammar = [FuncCall, Modifier, ObjectDereference,
@@ -395,6 +395,10 @@ class IncludeStatement(UnaryRule):
     grammar = '{', _, Keyword('include'), _, Literal('file='), DoubleQuotedString, _, '}'
 
 
+class SimpleTag(LeafRule):
+    grammar = '{', _, re.compile('|'.join(['init_time', 'process_time'])), _, '}'
+
+
 """
 Finally, the actual language description.
 """
@@ -402,7 +406,7 @@ Finally, the actual language description.
 SmartyLanguage.grammar = some([LiteralStatement, TranslationStatement,
                               IfStatement, ForStatement, IncludeStatement,
                               AssignStatement,
-                              FunctionStatement, CommentStatement,
+                              FunctionStatement, CommentStatement, SimpleTag,
                               PrintStatement, Content,
                               LeftDelimTag, RightDelimTag])
 
@@ -411,7 +415,7 @@ class SmartyLanguageMain(Rule):
     grammar = some([LiteralStatement, TranslationStatement,
                     IfStatement, ForStatement, IncludeStatement,
                     AssignStatement,
-                    FunctionStatement, CommentStatement,
+                    FunctionStatement, CommentStatement, SimpleTag,
                     PrintStatement, Content,
                     LeftDelimTag, RightDelimTag, LeftDelim])
 

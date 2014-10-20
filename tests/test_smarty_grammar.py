@@ -449,3 +449,7 @@ def test_assign():
 def test_assign_function():
     r = convert_code("{assign var=cache_get_queries value=$cache->get_get_queries()}")
     assert r == '{% set cache_get_queries = cache.get_get_queries() %}'
+
+def test_simple_tag():
+    r = convert_code("{init_time}")
+    assert r == '{{ init_time() }}'
