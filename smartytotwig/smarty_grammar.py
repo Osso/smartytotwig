@@ -373,20 +373,26 @@ class LeftDelim(EmptyLeafRule):
     grammar = '{'
 
 
+class IncludeStatement(UnaryRule):
+    grammar = '{', _, Keyword('include'), _, Literal('file='), DoubleQuotedString, _, '}'
+
+
 """
 Finally, the actual language description.
 """
 
 SmartyLanguage.grammar = some([LiteralStatement, TranslationStatement,
-                              IfStatement, ForStatement, FunctionStatement,
-                              CommentStatement, PrintStatement, Content,
+                              IfStatement, ForStatement, IncludeStatement,
+                              FunctionStatement, CommentStatement,
+                              PrintStatement, Content,
                               LeftDelimTag, RightDelimTag])
 
 
 class SmartyLanguageMain(Rule):
     grammar = some([LiteralStatement, TranslationStatement,
-                    IfStatement, ForStatement, FunctionStatement,
-                    CommentStatement, PrintStatement, Content,
+                    IfStatement, ForStatement, IncludeStatement,
+                    FunctionStatement, CommentStatement,
+                    PrintStatement, Content,
                     LeftDelimTag, RightDelimTag, LeftDelim])
 
 

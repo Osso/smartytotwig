@@ -417,6 +417,12 @@ def test_javascript():
     assert r == "{ dateFormat: 'yy-mm-dd' }"
 
 
+def test_include():
+    r = convert_code('{include file="foo/bar.tpl"}')
+    assert r == '{% include "foo/bar.twig" %}'
+
+
+
 def test_empty():
     r = convert_code("")
     assert r == ''

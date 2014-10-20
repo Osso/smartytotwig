@@ -20,7 +20,7 @@ from .smarty_grammar import (SmartyLanguage, DollarSymbol, PrintStatement,
                              SmartyLanguageMain, SmartyLanguageMainOrEmpty,
                              ForExpression, AddOperator, SubOperator,
                              MultOperator, DivOperator, ArithmeticOperator,
-                             Number, ForVariableIdentifier)
+                             Number, ForVariableIdentifier, IncludeStatement)
 
 
 class TwigPrinter(object):
@@ -453,5 +453,9 @@ class TwigPrinter(object):
     @visitor(ForVariableIdentifier)
     def visit(self, node, value):
         return value
+
+    @visitor(IncludeStatement)
+    def visit(self, node, filename):
+        return "{%% include %s %%}" % filename.replace('.tpl', '.twig')
 
     # pylint: enable=W0612,E0102
