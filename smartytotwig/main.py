@@ -48,7 +48,9 @@ def main():
     parser.add_option(opt4)
     options, dummy_args = parser.parse_args(sys.argv)
 
-    if options.source and options.target:
+    if options.source:
+        if not options.target:
+            options.target = "%s.twig" % options.source.replace('.tpl', '')
 
         ast = parse_file(options.source)
         out = ast.accept(TwigPrinter())
