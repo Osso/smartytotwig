@@ -399,14 +399,15 @@ class TwigPrinter(object):
     @visitor(ForVariable)
     def visit(self, node, loop_identifier, name, expression=None):
         mappings = {
-            'index': 'index0',
-            'iteration': 'index',
-            'total': 'length',
+            'index': 'loop.index0',
+            'iteration': 'loop.index',
+            'total': 'loop.length',
+            'key': '_key',
         }
         if expression:
-            return '{{ loop.%s %s }}' % (mappings[name], expression)
+            return '{{ %s %s }}' % (mappings[name], expression)
         else:
-            return '{{ loop.%s }}' % mappings[name]
+            return '{{ %s }}' % mappings[name]
 
     @visitor(TranslationStatement)
     def visit(self, node, child):
