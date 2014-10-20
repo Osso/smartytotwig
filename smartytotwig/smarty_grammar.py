@@ -329,12 +329,16 @@ class TranslationStatement(UnaryRule):
     grammar = '{', _, Keyword('t'), _, Literal('id='), DoubleQuotedString, _, '}'
 
 
-class LeftDelim(EmptyLeafRule):
+class LeftDelimTag(EmptyLeafRule):
     grammar = '{ldelim}'
 
 
-class RightDelim(EmptyLeafRule):
+class RightDelimTag(EmptyLeafRule):
     grammar = '{rdelim}'
+
+
+class LeftDelim(EmptyLeafRule):
+    grammar = '{'
 
 
 """
@@ -344,4 +348,10 @@ Finally, the actual language description.
 SmartyLanguage.grammar = some([LiteralStatement, TranslationStatement,
                               IfStatement, ForStatement, FunctionStatement,
                               CommentStatement, PrintStatement, Content,
-                              LeftDelim, RightDelim])
+                              LeftDelimTag, RightDelimTag])
+
+class SmartyLanguageMain(Rule):
+    grammar = some([LiteralStatement, TranslationStatement,
+                    IfStatement, ForStatement, FunctionStatement,
+                    CommentStatement, PrintStatement, Content,
+                    LeftDelimTag, RightDelimTag, LeftDelim])

@@ -13,16 +13,25 @@ from .smarty_grammar import (SmartyLanguage, DollarSymbol, PrintStatement,
                              CommentStatement, LiteralStatement, ForItem,
                              ForFrom, ForName, ForKey, Text, ForeachParameters,
                              ForeachelseStatement, ForStatement, ForeachArray,
-                             FunctionParameter, FunctionStatement,
+                             FunctionParameter, FunctionStatement, LeftDelim,
                              ElseifStatement, LeftParen, RightParen,
                              IfMoreStatement, ForVariable, ForContent,
-                             TranslationStatement, LeftDelim, RightDelim)
+                             TranslationStatement, LeftDelimTag, RightDelimTag,
+                             SmartyLanguageMain)
 
 
 class TwigPrinter(object):
     visitor = make_visitor()
 
     @visitor(SmartyLanguage)
+    def visit(self, node, *children):
+        """
+        A variable in Smarty:
+        $foo
+        """
+        return ''.join(children)
+
+    @visitor(SmartyLanguageMain)
     def visit(self, node, *children):
         """
         A variable in Smarty:
@@ -385,11 +394,15 @@ class TwigPrinter(object):
     def visit(self, node, child):
         return '{%% t %s %%}' % child
 
+    @visitor(LeftDelimTag)
+    def visit(self, node):
+        return '{'
+
     @visitor(LeftDelim)
     def visit(self, node):
         return '{'
 
-    @visitor(RightDelim)
+    @visitor(RightDelimTag)
     def visit(self, node):
         return '}'
 

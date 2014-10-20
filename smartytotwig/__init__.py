@@ -1,10 +1,10 @@
 import fileinput
 import pypeg2
 
-from .smarty_grammar import SmartyLanguage
+from .smarty_grammar import SmartyLanguageMain
 
 
-def parse_file(file_name, language=SmartyLanguage):
+def parse_file(file_name, language=SmartyLanguageMain):
     """
     Parse a smarty template file.
     """
@@ -12,7 +12,7 @@ def parse_file(file_name, language=SmartyLanguage):
         return pypeg2.parse(f.read(), language, filename=file_name, whitespace="")
 
 
-def parse_string(text, language=SmartyLanguage):
+def parse_string(text, language=SmartyLanguageMain):
     """
     Parse a Smarty template string.
     """
