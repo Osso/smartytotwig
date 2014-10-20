@@ -392,7 +392,7 @@ class LeftDelim(EmptyLeafRule):
 
 
 class IncludeStatement(UnaryRule):
-    grammar = '{', _, Keyword('include'), _, Literal('file='), DoubleQuotedString, _, '}'
+    grammar = '{', _, Keyword('include'), _, Literal('file='), Expression, _, '}'
 
 
 class SimpleTag(LeafRule):
