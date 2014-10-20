@@ -350,8 +350,13 @@ SmartyLanguage.grammar = some([LiteralStatement, TranslationStatement,
                               CommentStatement, PrintStatement, Content,
                               LeftDelimTag, RightDelimTag])
 
+
 class SmartyLanguageMain(Rule):
     grammar = some([LiteralStatement, TranslationStatement,
                     IfStatement, ForStatement, FunctionStatement,
                     CommentStatement, PrintStatement, Content,
                     LeftDelimTag, RightDelimTag, LeftDelim])
+
+
+class SmartyLanguageMainOrEmpty(UnaryRule):
+    grammar = [SmartyLanguageMain, EmptyOperator]

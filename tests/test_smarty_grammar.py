@@ -410,6 +410,6 @@ def test_javascript():
     r = convert_code("{ dateFormat: 'yy-mm-dd' }")
     assert r == "{ dateFormat: 'yy-mm-dd' }"
 
-# def test_empty():
-#     r = convert_code("")
-#     assert r == ''
+def test_empty():
+    r = convert_code("")
+    assert r == ''
