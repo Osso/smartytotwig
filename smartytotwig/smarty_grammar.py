@@ -227,7 +227,7 @@ class FuncParams(Rule):
 
 
 class FuncCall(Rule):
-    grammar = Identifier, omit(LeftParen), optional([FuncParams, Expression]), omit(RightParen)
+    grammar = Identifier, optional(omit(LeftParen), optional([FuncParams, Expression]), omit(RightParen))
 
 
 Expression.grammar = [FuncCall, Modifier, ObjectDereference,
