@@ -422,7 +422,6 @@ def test_include():
     assert r == '{% include "foo/bar.twig" %}'
 
 
-
 def test_empty():
     r = convert_code("")
     assert r == ''

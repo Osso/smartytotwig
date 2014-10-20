@@ -1,5 +1,6 @@
 import optparse
 import sys
+import io
 
 from . import parse_file
 from .twig_printer import TwigPrinter
@@ -54,7 +55,7 @@ def main():
 
         ast = parse_file(options.source)
         out = ast.accept(TwigPrinter())
-        with open(options.target, 'w+') as f:
+        with io.open(options.target, 'w', encoding='utf-8') as f:
             f.write(out)
 
         print 'Template outputted to %s' % options.target

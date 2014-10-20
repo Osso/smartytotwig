@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from .tree_walker import make_visitor
 from .smarty_grammar import (SmartyLanguage, DollarSymbol, PrintStatement,
                              Identifier, LiteralStatement, Variable, Symbol,
