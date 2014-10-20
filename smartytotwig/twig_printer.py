@@ -15,7 +15,8 @@ from .smarty_grammar import (SmartyLanguage, DollarSymbol, PrintStatement,
                              ForeachelseStatement, ForStatement, ForeachArray,
                              FunctionParameter, FunctionStatement,
                              ElseifStatement, LeftParen, RightParen,
-                             IfMoreStatement)
+                             IfMoreStatement, ForVariable, ForContent,
+                             TranslationStatement, LeftDelim, RightDelim)
 
 
 class TwigPrinter(object):
@@ -366,3 +367,29 @@ class TwigPrinter(object):
     @visitor(IfMoreStatement)
     def visit(self, node, *children):
         return ''.join(children)
+
+    @visitor(ForContent)
+    def visit(self, node, *children):
+        return ''.join(children)
+
+    @visitor(ForVariable)
+    def visit(self, node, loop_identifier, name):
+        mappings = {
+            'index': 'index0',
+            'iteration': 'index',
+            'total': 'length',
+        }
+        return '{{ loop.%s }}' % mappings[name]
+
+    @visitor(TranslationStatement)
+    def visit(self, node, child):
+        return '{%% t %s %%}' % child
+
+    @visitor(LeftDelim)
+    def visit(self, node):
+        return '{'
+
+    @visitor(RightDelim)
+    def visit(self, node):
+        return '}'
+

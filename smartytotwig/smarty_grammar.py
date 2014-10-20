@@ -304,20 +304,44 @@ class IfStatement(Rule):
 
 
 class ForeachArray(Rule):
-    grammar = _, Symbol, _, 'as', _, Symbol
+    grammar = _, Expression, _, 'as', _, Symbol
+
+
+class ForVariable(Rule):
+    grammar = '{', _, Variable, '@', Identifier, _, '}'
 
 
 class ForeachParameters(Rule):
     grammar = some(_, [ForFrom, ForItem, ForName, ForKey])
 
+
+class ForContent(Rule):
+    grammar = some([ForVariable, SmartyLanguage])
+
+
 class ForStatement(Rule):
     grammar = ('{', _, Keyword('foreach'), [ForeachParameters, ForeachArray], _, '}',
-               SmartyLanguage, optional(ForeachelseStatement),
+               ForContent, optional(ForeachelseStatement),
                '{/', Keyword('foreach'), '}')
+
+
+class TranslationStatement(UnaryRule):
+    grammar = '{', _, Keyword('t'), _, Literal('id='), DoubleQuotedString, _, '}'
+
+
+class LeftDelim(EmptyLeafRule):
+    grammar = '{ldelim}'
+
+
+class RightDelim(EmptyLeafRule):
+    grammar = '{rdelim}'
+
 
 """
 Finally, the actual language description.
 """
 
-SmartyLanguage.grammar = some([LiteralStatement, IfStatement, ForStatement,
-                    FunctionStatement, CommentStatement, PrintStatement, Content])
+SmartyLanguage.grammar = some([LiteralStatement, TranslationStatement,
+                              IfStatement, ForStatement, FunctionStatement,
+                              CommentStatement, PrintStatement, Content,
+                              LeftDelim, RightDelim])

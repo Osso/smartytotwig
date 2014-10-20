@@ -188,6 +188,16 @@ def test_if_variable_dereference_2():
     assert r == "{% if foo.bar %}\nhello\n{% endif %}"
 
 
+def test_if_variable_dereference_3():
+    r = convert_code("{if $foo.bar}\nhello\n{/if}")
+    assert r == "{% if foo.bar %}\nhello\n{% endif %}"
+
+
+def test_if_variable_dereference_4():
+    r = convert_code("{if $foo->bar}\nhello\n{/if}")
+    assert r == "{% if foo.bar %}\nhello\n{% endif %}"
+
+
 def test_if_array():
     r = convert_code("{if foo['bar']}\nhello\n{/if}")
     assert r == "{% if foo['bar'] %}\nhello\n{% endif %}"
@@ -248,11 +258,13 @@ def test_if_string_statement():
         "{if 'hello'}\nbar\n{/if}")
     assert r == "{% if 'hello' %}\nbar\n{% endif %}"
 
+
 def test_if_elseif_and_statement():
     """Test an an if with an else and an elseif and two logical operations."""
     r = convert_code(
         "{if foo}\nbar\n{elseif awesome.sauce[1] and blue and 'hello'}\nfoo{/if}")
     assert r == "{% if foo %}\nbar\n{% elseif awesome.sauce[1] and blue and 'hello' %}\nfoo{% endif %}"
+
 
 def test_if_not_array_statement():
     r = convert_code(
@@ -279,6 +291,13 @@ def test_if_elseif_paren_statement():
     r = convert_code(
         "{if foo}\nbar\n{elseif (foo and bar) or foo and (bar or (foo and bar))}\nfoo{/if}")
     assert r == "{% if foo %}\nbar\n{% elseif (foo and bar) or foo and (bar or (foo and bar)) %}\nfoo{% endif %}"
+
+
+def test_if_variable_statement():
+    """Test an an elseif statement with parenthesis."""
+    r = convert_code(
+        "{if $foo}\nbar\n{/if}")
+    assert r == "{% if foo %}\nbar\n{% endif %}"
 
 
 def test_function_statement():
@@ -356,6 +375,35 @@ def test_literal():
     r = convert_code("{literal}{foo}{/literal}")
     assert r == '{foo}'
 
+
+def test_variable_underscore():
+    r = convert_code("{$news_item}")
+    assert r == '{{ news_item }}'
+
+
+def test_variable_dereference_filter_nofilter():
+    r = convert_code("{$newsitem.parsed_body|html_substr:250 nofilter}")
+    assert r == '{{ "%s"|format(newsitem.parsed_body|html_substr(250)) }}'
+
+
+def test_variable_dereference_filter_nofilter():
+    r = convert_code("{$newsitem.parsed_body|html_substr:250}")
+    assert r == '{{ newsitem.parsed_body|html_substr(250) }}'
+
+
+def test_for_iteration():
+    r = convert_code("{foreach $foo as $bar}{$bar@iteration}{/foreach}")
+    assert r == '{% for bar in foo %}{{ loop.index }}{% endfor %}'
+
+
+def test_for_multiline():
+    r = convert_code("{foreach $foo as $bar}\nhello\n{$bar@iteration}\n{/foreach}")
+    assert r == "{% for bar in foo %}\nhello\n{{ loop.index }}\n{% endfor %}"
+
+
+def test_translation():
+    r = convert_code('{t id="hello"}')
+    assert r == '{% t "hello" %}'
 
 # def test_empty():
 #     r = convert_code("")
