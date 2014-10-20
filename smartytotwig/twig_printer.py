@@ -22,7 +22,8 @@ from .smarty_grammar import (SmartyLanguage, DollarSymbol, PrintStatement,
                              SmartyLanguageMain, SmartyLanguageMainOrEmpty,
                              ForExpression, AddOperator, SubOperator,
                              MultOperator, DivOperator, ArithmeticOperator,
-                             Number, ForVariableIdentifier, IncludeStatement)
+                             Number, ForVariableIdentifier, IncludeStatement,
+                             IsLink)
 
 
 class TwigPrinter(object):
@@ -410,8 +411,11 @@ class TwigPrinter(object):
             return '{{ %s }}' % mappings[name]
 
     @visitor(TranslationStatement)
-    def visit(self, node, child):
-        return '{%% t %s %%}' % child
+    def visit(self, node, phrase, islink=None):
+        if islink:
+            return '{%% t %s %s %%}' % (phrase, islink)
+        else:
+            return '{%% t %s %%}' % phrase
 
     @visitor(LeftDelimTag)
     def visit(self, node):
@@ -456,6 +460,13 @@ class TwigPrinter(object):
     @visitor(ForVariableIdentifier)
     def visit(self, node, value):
         return value
+
+    @visitor(IsLink)
+    def visit(self, node, value):
+        if value == 'true':
+            return 'islink'
+        else:
+            return ''
 
     @visitor(IncludeStatement)
     def visit(self, node, filename):

@@ -357,8 +357,15 @@ class ForStatement(Rule):
                '{/', Keyword('foreach'), '}')
 
 
-class TranslationStatement(UnaryRule):
-    grammar = '{', _, Keyword('t'), _, Literal('id='), DoubleQuotedString, _, '}'
+class IsLink(LeafRule):
+    grammar = Literal('quoted='), re.compile('true|false')
+
+
+class TranslationStatement(Rule):
+    grammar = ('{', _, Keyword('t'), _,
+               Literal('id='), DoubleQuotedString,
+               optional(_, IsLink),
+               _, '}')
 
 
 class LeftDelimTag(EmptyLeafRule):
