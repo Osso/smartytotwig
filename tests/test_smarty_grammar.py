@@ -303,27 +303,27 @@ def test_if_variable_statement():
 def test_function_statement():
     """Test a a simple function statement."""
     r = convert_code("{foo arg1=bar arg2=3}")
-    assert r == "{{ ['arg1': bar, 'arg2': 3]|foo }}"
+    assert r == "{{ {'arg1': bar, 'arg2': 3}|foo }}"
 
 
 def test_function_statement2():
     """Test a a simple function statement with object and array arguments."""
     r = convert_code(
         "{foo arg1=bar[1] arg2=foo.bar.foo arg3=foo.bar[3] arg4=foo.bar.awesome[3] }")
-    assert r == "{{ ['arg1': bar[1], 'arg2': foo.bar.foo, 'arg3': foo.bar[3], 'arg4': foo.bar.awesome[3]]|foo }}"
+    assert r == "{{ {'arg1': bar[1], 'arg2': foo.bar.foo, 'arg3': foo.bar[3], 'arg4': foo.bar.awesome[3]}|foo }}"
 
 
 def test_function_statement_at_operator():
     """Test a a simple function statement."""
     r = convert_code("{@foo arg1=bar arg2=3}")
-    assert r == "{{ ['arg1': bar, 'arg2': 3]|foo }}"
+    assert r == "{{ {'arg1': bar, 'arg2': 3}|foo }}"
 
 
 def test_function_statement3():
     """Test a function statement with modifiers in in the parameters."""
     r = convert_code(
         "{foo arg1=bar[1]|modifier arg2=foo.bar.foo arg3=foo.bar[3]|modifier:array[0]:\"hello $foo \" arg4=foo.bar.awesome[3]|modifier2:7:'hello':\"hello\":\"`$apple.banana`\"}")
-    assert r == "{{ [\'arg1\': bar[1]|modifier, \'arg2\': foo.bar.foo, \'arg3\': foo.bar[3]|modifier(array[0], \"hello ${foo} \"), \'arg4\': foo.bar.awesome[3]|modifier2(7, \'hello\', \"hello\", \"${apple.banana}\")]|foo }}"
+    assert r == "{{ {\'arg1\': bar[1]|modifier, \'arg2\': foo.bar.foo, \'arg3\': foo.bar[3]|modifier(array[0], \"hello ${foo} \"), \'arg4\': foo.bar.awesome[3]|modifier2(7, \'hello\', \"hello\", \"${apple.banana}\")}|foo }}"
 
 
 def test_for_statement():
@@ -435,3 +435,11 @@ def test_include():
 def test_empty():
     r = convert_code("")
     assert r == ''
+
+def test_assign():
+    r = convert_code("{assign var=cache_get_queries value=$cache}")
+    assert r == '{% set cache_get_queries = cache %}'
+
+def test_assign_function():
+    r = convert_code("{assign var=cache_get_queries value=$cache->get_get_queries()}")
+    assert r == '{% set cache_get_queries = cache.get_get_queries() %}'

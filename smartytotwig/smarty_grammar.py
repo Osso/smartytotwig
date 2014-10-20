@@ -368,6 +368,13 @@ class TranslationStatement(Rule):
                _, '}')
 
 
+class AssignStatement(Rule):
+    grammar = ('{', _, Keyword('assign'), _,
+               Literal('var='), Identifier, _,
+               Literal('value='), Expression,
+               _, '}')
+
+
 class LeftDelimTag(EmptyLeafRule):
     grammar = '{ldelim}'
 
@@ -390,6 +397,7 @@ Finally, the actual language description.
 
 SmartyLanguage.grammar = some([LiteralStatement, TranslationStatement,
                               IfStatement, ForStatement, IncludeStatement,
+                              AssignStatement,
                               FunctionStatement, CommentStatement,
                               PrintStatement, Content,
                               LeftDelimTag, RightDelimTag])
@@ -398,6 +406,7 @@ SmartyLanguage.grammar = some([LiteralStatement, TranslationStatement,
 class SmartyLanguageMain(Rule):
     grammar = some([LiteralStatement, TranslationStatement,
                     IfStatement, ForStatement, IncludeStatement,
+                    AssignStatement,
                     FunctionStatement, CommentStatement,
                     PrintStatement, Content,
                     LeftDelimTag, RightDelimTag, LeftDelim])
