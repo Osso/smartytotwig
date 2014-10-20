@@ -396,8 +396,14 @@ def test_for_iteration():
     assert r == '{% for bar in foo %}{{ loop.index }}{% endfor %}'
 
 
+def test_for_iteration_expression():
+    r = convert_code("{foreach $foo as $bar}{$bar@iteration+1}{/foreach}")
+    assert r == '{% for bar in foo %}{{ loop.index + 1 }}{% endfor %}'
+
+
 def test_for_multiline():
-    r = convert_code("{foreach $foo as $bar}\nhello\n{$bar@iteration}\n{/foreach}")
+    r = convert_code(
+        "{foreach $foo as $bar}\nhello\n{$bar@iteration}\n{/foreach}")
     assert r == "{% for bar in foo %}\nhello\n{{ loop.index }}\n{% endfor %}"
 
 
@@ -409,6 +415,7 @@ def test_translation():
 def test_javascript():
     r = convert_code("{ dateFormat: 'yy-mm-dd' }")
     assert r == "{ dateFormat: 'yy-mm-dd' }"
+
 
 def test_empty():
     r = convert_code("")

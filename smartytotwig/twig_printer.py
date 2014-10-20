@@ -17,11 +17,16 @@ from .smarty_grammar import (SmartyLanguage, DollarSymbol, PrintStatement,
                              ElseifStatement, LeftParen, RightParen,
                              IfMoreStatement, ForVariable, ForContent,
                              TranslationStatement, LeftDelimTag, RightDelimTag,
-                             SmartyLanguageMain, SmartyLanguageMainOrEmpty)
+                             SmartyLanguageMain, SmartyLanguageMainOrEmpty,
+                             ForExpression, AddOperator, SubOperator,
+                             MultOperator, DivOperator, ArithmeticOperator,
+                             Number, ForVariableIdentifier)
 
 
 class TwigPrinter(object):
     visitor = make_visitor()
+
+    # pylint: disable=W0613,E0102
 
     @visitor(SmartyLanguage)
     def visit(self, node, *children):
@@ -390,13 +395,16 @@ class TwigPrinter(object):
         return ''.join(children)
 
     @visitor(ForVariable)
-    def visit(self, node, loop_identifier, name):
+    def visit(self, node, loop_identifier, name, expression=None):
         mappings = {
             'index': 'index0',
             'iteration': 'index',
             'total': 'length',
         }
-        return '{{ loop.%s }}' % mappings[name]
+        if expression:
+            return '{{ loop.%s %s }}' % (mappings[name], expression)
+        else:
+            return '{{ loop.%s }}' % mappings[name]
 
     @visitor(TranslationStatement)
     def visit(self, node, child):
@@ -413,3 +421,37 @@ class TwigPrinter(object):
     @visitor(RightDelimTag)
     def visit(self, node):
         return '}'
+
+    @visitor(ForExpression)
+    def visit(self, node, operator, number):
+        return '%s %s' % (operator, number)
+
+    @visitor(Number)
+    def visit(self, node, child):
+        return child
+
+    @visitor(AddOperator)
+    def visit(self, node):
+        return '+'
+
+    @visitor(SubOperator)
+    def visit(self, node):
+        return '-'
+
+    @visitor(MultOperator)
+    def visit(self, node):
+        return '*'
+
+    @visitor(DivOperator)
+    def visit(self, node):
+        return '/'
+
+    @visitor(ArithmeticOperator)
+    def visit(self, node, child):
+        return child
+
+    @visitor(ForVariableIdentifier)
+    def visit(self, node, value):
+        return value
+
+    # pylint: enable=W0612,E0102

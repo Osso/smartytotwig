@@ -87,7 +87,7 @@ _ = omit(Whitespace)
 
 
 class Identifier(LeafRule):
-    grammar = re.compile(r'[\w\-\+]*\w')
+    grammar = re.compile(r'[\w\-\+\*\/]*\w')
 
 
 """
@@ -307,8 +307,40 @@ class ForeachArray(Rule):
     grammar = _, Expression, _, 'as', _, Symbol
 
 
+class AddOperator(EmptyLeafRule):
+    grammar = '+'
+
+
+class SubOperator(EmptyLeafRule):
+    grammar = '-'
+
+
+class MultOperator(EmptyLeafRule):
+    grammar = '*'
+
+
+class DivOperator(EmptyLeafRule):
+    grammar = '/'
+
+
+class ArithmeticOperator(UnaryRule):
+    grammar = [AddOperator, SubOperator, MultOperator, DivOperator]
+
+
+class Number(LeafRule):
+    grammar = re.compile(r'\d+')
+
+
+class ForExpression(Rule):
+    grammar = ArithmeticOperator, Number
+
+
+class ForVariableIdentifier(LeafRule):
+    grammar = re.compile(r'\w+')
+
+
 class ForVariable(Rule):
-    grammar = '{', _, Variable, '@', Identifier, _, '}'
+    grammar = '{', _, Variable, '@', ForVariableIdentifier, optional(_, ForExpression), _, '}'
 
 
 class ForeachParameters(Rule):
