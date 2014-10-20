@@ -126,6 +126,10 @@ class GteOperator(EmptyLeafRule):
     grammar = Literal('>=')
 
 
+class IsOperator(EmptyLeafRule):
+    grammar = Literal('instanceof')
+
+
 class RightParen(EmptyLeafRule):
     grammar = Literal(')')
 
@@ -136,7 +140,7 @@ class LeftParen(EmptyLeafRule):
 
 class Operator(UnaryRule):
     grammar = [AndOperator, EqOperator, GteOperator, LteOperator,
-               LtOperator, GtOperator, NeOperator, OrOperator]
+               LtOperator, GtOperator, NeOperator, OrOperator, IsOperator]
 
 """
 Smarty variables.

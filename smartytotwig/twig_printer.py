@@ -23,7 +23,7 @@ from .smarty_grammar import (SmartyLanguage, DollarSymbol, PrintStatement,
                              ForExpression, AddOperator, SubOperator,
                              MultOperator, DivOperator, ArithmeticOperator,
                              Number, ForVariableIdentifier, IncludeStatement,
-                             IsLink, AssignStatement)
+                             IsLink, AssignStatement, IsOperator)
 
 
 class TwigPrinter(object):
@@ -452,6 +452,10 @@ class TwigPrinter(object):
     @visitor(DivOperator)
     def visit(self, node):
         return '/'
+
+    @visitor(IsOperator)
+    def visit(self, node):
+        return 'is'
 
     @visitor(ArithmeticOperator)
     def visit(self, node, child):

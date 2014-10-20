@@ -167,6 +167,10 @@ def test_if_greater_or_equal_statement():
     r = convert_code("{if foo >= bar}\nhello\n{/if}")
     assert r == "{% if foo >= bar %}\nhello\n{% endif %}"
 
+def test_if_instanceof():
+    r = convert_code("{if foo instanceof bar}\nhello\n{/if}")
+    assert r == "{% if foo is bar %}\nhello\n{% endif %}"
+
 
 def test_if_func_statement():
     r = convert_code("{if foo($bar)}\nhello\n{/if}")
@@ -436,9 +440,11 @@ def test_empty():
     r = convert_code("")
     assert r == ''
 
+
 def test_assign():
     r = convert_code("{assign var=cache_get_queries value=$cache}")
     assert r == '{% set cache_get_queries = cache %}'
+
 
 def test_assign_function():
     r = convert_code("{assign var=cache_get_queries value=$cache->get_get_queries()}")
