@@ -82,7 +82,7 @@ class TwigPrinter(object):
         $foo
         """
         if nofilter:
-            child = '"%%s"|format(%s)' % child
+            child = '%s|raw' % child
         return "{{ %s }}" % child
 
     @visitor(DollarSymbol)

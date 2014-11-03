@@ -20,7 +20,7 @@ def test_print_symbol():
 
 def test_print_symbol_no_filter():
     r = convert_code("{$foo nofilter}")
-    assert r == '{{ "%s"|format(foo) }}'
+    assert r == '{{ foo|raw }}'
 
 
 def test_whitespace_before():
@@ -60,7 +60,7 @@ def test_print_double_quoted_string():
 
 def test_print_double_quoted_string_no_filter():
     r = convert_code('{"foo" nofilter}')
-    assert r == '{{ "%s"|format("foo") }}'
+    assert r == '{{ "foo"|raw }}'
 
 
 def test_print_variable_double_quoted_string():
@@ -70,7 +70,7 @@ def test_print_variable_double_quoted_string():
 
 def test_print_variable_double_quoted_string_no_filter():
     r = convert_code('{"$foo" nofilter}')
-    assert r == '{{ "%s"|format("${foo}") }}'
+    assert r == '{{ "${foo}"|raw }}'
 
 
 def test_print_variable_single_quoted_string():
