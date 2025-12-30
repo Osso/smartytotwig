@@ -5,7 +5,7 @@ from . import parse_file
 from .twig_printer import TwigPrinter
 
 
-def main():
+def main() -> None:
     opt1 = optparse.make_option(
         "-s", "--smarty-file", action="store", dest="source", help="Path to the source Smarty file."
     )
