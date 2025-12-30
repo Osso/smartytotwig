@@ -28,6 +28,7 @@ allow-direct-references = true
 [dependency-groups]
 dev = [
     "pytest>=8.0",
+    "pyright>=1.1",
     "ruff>=0.8",
 ]
 
@@ -45,6 +46,13 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "smartytotwig/tree_walker.py" = ["F821", "F401"]  # legacy file, not used
+
+[tool.pyright]
+typeCheckingMode = "basic"
+exclude = ["smartytotwig/tree_walker.py"]  # legacy file with exec'd globals
+reportRedeclaration = false  # visitor pattern redefines visit() by design
+reportAttributeAccessIssue = false  # pypeg2 uses dynamic attributes
+reportArgumentType = false  # pypeg2 typing is incomplete
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
