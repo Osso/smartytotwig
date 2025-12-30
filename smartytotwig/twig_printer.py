@@ -1,32 +1,85 @@
-from __future__ import unicode_literals
-
+from .smarty_grammar import (
+    AddOperator,
+    AndOperator,
+    ArithmeticOperator,
+    Array,
+    AssignStatement,
+    AtOperator,
+    CommentStatement,
+    Content,
+    DivOperator,
+    DollarSymbol,
+    DoubleQuotedString,
+    ElseifStatement,
+    ElseStatement,
+    EmptyOperator,
+    EqOperator,
+    ExpNoModifier,
+    Expression,
+    ForContent,
+    ForeachArray,
+    ForeachelseStatement,
+    ForeachParameters,
+    ForExpression,
+    ForFrom,
+    ForItem,
+    ForKey,
+    ForName,
+    ForStatement,
+    ForVariable,
+    ForVariableIdentifier,
+    FuncCall,
+    FuncParams,
+    FunctionParameter,
+    FunctionStatement,
+    GteOperator,
+    GtOperator,
+    Identifier,
+    IfCondition,
+    IfConditionList,
+    IfMoreStatement,
+    IfStatement,
+    IncludeStatement,
+    IsLink,
+    IsOperator,
+    LeftDelim,
+    LeftDelimTag,
+    LeftParen,
+    LiteralStatement,
+    LteOperator,
+    LtOperator,
+    Modifier,
+    ModifierElement,
+    ModifierParameters,
+    ModifierRight,
+    MultOperator,
+    NeOperator,
+    NoFilter,
+    NotOperator,
+    Number,
+    ObjectDereference,
+    Operator,
+    OrOperator,
+    PrintStatement,
+    RightDelimTag,
+    RightParen,
+    SimpleTag,
+    SingleQuotedString,
+    SmartyLanguage,
+    SmartyLanguageMain,
+    SmartyLanguageMainOrEmpty,
+    String,
+    SubOperator,
+    Symbol,
+    Text,
+    TranslationStatement,
+    Variable,
+    VariableString,
+)
 from .tree_walker import make_visitor
-from .smarty_grammar import (SmartyLanguage, DollarSymbol, PrintStatement,
-                             Identifier, LiteralStatement, Variable, Symbol,
-                             EmptyOperator, ExpNoModifier, ModifierParameters,
-                             ModifierElement, ModifierRight, Modifier,
-                             String, Expression, Array, SingleQuotedString,
-                             DoubleQuotedString, VariableString, FuncCall,
-                             ObjectDereference, Content, NoFilter, IfCondition,
-                             IfStatement, IfConditionList, NotOperator,
-                             AtOperator, AndOperator, OrOperator, GtOperator,
-                             GteOperator, LtOperator, LteOperator, Operator,
-                             EqOperator, NeOperator, FuncParams, ElseStatement,
-                             CommentStatement, LiteralStatement, ForItem,
-                             ForFrom, ForName, ForKey, Text, ForeachParameters,
-                             ForeachelseStatement, ForStatement, ForeachArray,
-                             FunctionParameter, FunctionStatement, LeftDelim,
-                             ElseifStatement, LeftParen, RightParen,
-                             IfMoreStatement, ForVariable, ForContent,
-                             TranslationStatement, LeftDelimTag, RightDelimTag,
-                             SmartyLanguageMain, SmartyLanguageMainOrEmpty,
-                             ForExpression, AddOperator, SubOperator,
-                             MultOperator, DivOperator, ArithmeticOperator,
-                             Number, ForVariableIdentifier, IncludeStatement,
-                             IsLink, AssignStatement, IsOperator, SimpleTag)
 
 
-class TwigPrinter(object):
+class TwigPrinter:
     visitor = make_visitor()
 
     # pylint: disable=W0613,E0102
@@ -37,7 +90,7 @@ class TwigPrinter(object):
         A variable in Smarty:
         $foo
         """
-        return ''.join(children)
+        return "".join(children)
 
     @visitor(SmartyLanguageMain)
     def visit(self, node, *children):
@@ -45,7 +98,7 @@ class TwigPrinter(object):
         A variable in Smarty:
         $foo
         """
-        return ''.join(children)
+        return "".join(children)
 
     @visitor(SmartyLanguageMainOrEmpty)
     def visit(self, node, child):
@@ -61,15 +114,16 @@ class TwigPrinter(object):
         A variable in Smarty:
         $foo
         """
+
         def out(child_node, child):
             if isinstance(child_node, Expression):
                 return "${%s}" % child
             else:
                 return child
 
-        return '"%s"' % ''.join(out(child_node, child)
-                                for child_node, child
-                                in zip(node.children, children))
+        return '"%s"' % "".join(
+            out(child_node, child) for child_node, child in zip(node.children, children)
+        )
 
     @visitor(NoFilter)
     def visit(self, node):
@@ -82,7 +136,7 @@ class TwigPrinter(object):
         $foo
         """
         if nofilter:
-            child = '%s|raw' % child
+            child = "%s|raw" % child
         return "{{ %s }}" % child
 
     @visitor(DollarSymbol)
@@ -95,7 +149,6 @@ class TwigPrinter(object):
             return "%s %s" % (operator, variable)
         else:
             return variable
-
 
     @visitor(Symbol)
     def visit(self, node, left, right):
@@ -125,14 +178,14 @@ class TwigPrinter(object):
         A not in smarty:
         !foo
         """
-        return 'not'
+        return "not"
 
     @visitor(EmptyOperator)
     def visit(self, node):
         """
         Used when there is no operator
         """
-        return ''
+        return ""
 
     @visitor(ExpNoModifier)
     def visit(self, node, child):
@@ -166,14 +219,6 @@ class TwigPrinter(object):
         foo
         """
         return value
-
-    @visitor(LiteralStatement)
-    def visit(self, node):
-        """
-        A literal in Smarty:
-        {literal}function { console.log('hello') }{/literal}
-        """
-        return node.replace('{literal}', '').replace('{/literal}', '')
 
     @visitor(ModifierRight)
     def visit(self, node, *children):
@@ -232,7 +277,7 @@ class TwigPrinter(object):
         foo->bar
         foo.bar
         """
-        return '%s.%s' % (variable, ref)
+        return "%s.%s" % (variable, ref)
 
     @visitor(Content)
     def visit(self, node, content):
@@ -246,12 +291,12 @@ class TwigPrinter(object):
     @visitor(FuncCall)
     def visit(self, node, func_name, parameters=None):
         if not parameters:
-            parameters = ''
+            parameters = ""
         return "%s(%s)" % (func_name, parameters)
 
     @visitor(IfCondition)
     def visit(self, node, *children):
-        return ''.join(children)
+        return "".join(children)
 
     @visitor(IfConditionList)
     def visit(self, node, *children):
@@ -349,7 +394,7 @@ class TwigPrinter(object):
 
     @visitor(Text)
     def visit(self, node, value):
-        return ''.join(value)
+        return "".join(value)
 
     @visitor(ForStatement)
     def visit(self, node, parameters, content, else_statement=None):
@@ -357,14 +402,11 @@ class TwigPrinter(object):
         iterable = parameters[ForFrom]
         if else_statement:
             content += else_statement
-        return '{%% for %s in %s %%}%s{%% endfor %%}' % (element, iterable, content)
+        return "{%% for %s in %s %%}%s{%% endfor %%}" % (element, iterable, content)
 
     @visitor(ForeachArray)
     def visit(self, node, iterable, element):
-        return {
-            ForItem: element,
-            ForFrom: iterable
-        }
+        return {ForItem: element, ForFrom: iterable}
 
     @visitor(ForeachParameters)
     def visit(self, node, *values):
@@ -375,7 +417,7 @@ class TwigPrinter(object):
 
     @visitor(ForeachelseStatement)
     def visit(self, node, child):
-        return '{%% else %%}%s' % child
+        return "{%% else %%}%s" % child
 
     @visitor(FunctionParameter)
     def visit(self, node, symbol, expression):
@@ -383,55 +425,55 @@ class TwigPrinter(object):
 
     @visitor(FunctionStatement)
     def visit(self, node, symbol, *parameters):
-        return "{{ {%s}|%s }}" % (', '.join(parameters), symbol)
+        return "{{ {%s}|%s }}" % (", ".join(parameters), symbol)
 
     @visitor(AtOperator)
     def visit(self, node):
-        return ''
+        return ""
 
     @visitor(IfMoreStatement)
     def visit(self, node, *children):
-        return ''.join(children)
+        return "".join(children)
 
     @visitor(ForContent)
     def visit(self, node, *children):
-        return ''.join(children)
+        return "".join(children)
 
     @visitor(ForVariable)
     def visit(self, node, loop_identifier, name, expression=None):
         mappings = {
-            'index': 'loop.index0',
-            'iteration': 'loop.index',
-            'total': 'loop.length',
-            'key': '_key',
+            "index": "loop.index0",
+            "iteration": "loop.index",
+            "total": "loop.length",
+            "key": "_key",
         }
         if expression:
-            return '{{ %s %s }}' % (mappings[name], expression)
+            return "{{ %s %s }}" % (mappings[name], expression)
         else:
-            return '{{ %s }}' % mappings[name]
+            return "{{ %s }}" % mappings[name]
 
     @visitor(TranslationStatement)
     def visit(self, node, phrase, islink=None):
         if islink:
-            return '{%% t %s %s %%}' % (phrase, islink)
+            return "{%% t %s %s %%}" % (phrase, islink)
         else:
-            return '{%% t %s %%}' % phrase
+            return "{%% t %s %%}" % phrase
 
     @visitor(LeftDelimTag)
     def visit(self, node):
-        return '{'
+        return "{"
 
     @visitor(LeftDelim)
     def visit(self, node):
-        return '{'
+        return "{"
 
     @visitor(RightDelimTag)
     def visit(self, node):
-        return '}'
+        return "}"
 
     @visitor(ForExpression)
     def visit(self, node, operator, number):
-        return '%s %s' % (operator, number)
+        return "%s %s" % (operator, number)
 
     @visitor(Number)
     def visit(self, node, child):
@@ -439,23 +481,23 @@ class TwigPrinter(object):
 
     @visitor(AddOperator)
     def visit(self, node):
-        return '+'
+        return "+"
 
     @visitor(SubOperator)
     def visit(self, node):
-        return '-'
+        return "-"
 
     @visitor(MultOperator)
     def visit(self, node):
-        return '*'
+        return "*"
 
     @visitor(DivOperator)
     def visit(self, node):
-        return '/'
+        return "/"
 
     @visitor(IsOperator)
     def visit(self, node):
-        return 'is'
+        return "is"
 
     @visitor(ArithmeticOperator)
     def visit(self, node, child):
@@ -467,14 +509,14 @@ class TwigPrinter(object):
 
     @visitor(IsLink)
     def visit(self, node, value):
-        if value == 'true':
-            return 'islink'
+        if value == "true":
+            return "islink"
         else:
-            return ''
+            return ""
 
     @visitor(IncludeStatement)
     def visit(self, node, filename):
-        return "{%% include %s %%}" % filename.replace('.tpl', '.twig')
+        return "{%% include %s %%}" % filename.replace(".tpl", ".twig")
 
     @visitor(AssignStatement)
     def visit(self, node, var, value):
