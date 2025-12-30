@@ -9,7 +9,7 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
-    "pypeg2 @ git+https://github.com/osso/pypeg@a67f6ba75da71a8ee9694caaa6a4716354409fbb",
+    "pypeg2 @ git+https://github.com/osso/pypeg@502aa0e6004376bd712ba338af391cfc875ae697",
 ]
 
 [project.scripts]
@@ -28,6 +28,7 @@ allow-direct-references = true
 [dependency-groups]
 dev = [
     "pytest>=8.0",
+    "pytest-cov>=7.0",
     "pyright>=1.1",
     "ruff>=0.8",
 ]
@@ -49,10 +50,11 @@ ignore = [
 
 [tool.pyright]
 typeCheckingMode = "basic"
-exclude = ["smartytotwig/tree_walker.py"]  # legacy file with exec'd globals
+exclude = ["smartytotwig/tree_walker.py", ".venv"]  # legacy file with exec'd globals
 reportRedeclaration = false  # visitor pattern redefines visit() by design
 reportAttributeAccessIssue = false  # pypeg2 uses dynamic attributes
 reportArgumentType = false  # pypeg2 typing is incomplete
+reportCallIssue = false  # visitor pattern uses dynamic dispatch
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

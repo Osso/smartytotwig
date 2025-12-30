@@ -1,61 +1,72 @@
 # pylint: disable=R0903
 
+from __future__ import annotations
 
 import re
+from typing import TYPE_CHECKING, Any
 
 from pypeg2 import Keyword, Literal, maybe_some, omit, optional, some
 
+if TYPE_CHECKING:
+    from .twig_printer import TwigPrinter
+
 
 class Rule:
-    def __init__(self, args):
+    children: list[Any]
+
+    def __init__(self, args: list[Any]) -> None:
         self.children = args
 
-    def accept(self, visitor):
+    def accept(self, visitor: TwigPrinter) -> str:
         return visitor.visit(self, *[arg.accept(visitor) for arg in self.children])
 
-    def __eq__(self, other):
-        return type(self) is type(other) and self.children == other.args
+    def __eq__(self, other: object) -> bool:
+        return type(self) is type(other) and self.children == getattr(other, "args", None)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "%s(%s)" % (self.__class__.__name__, repr(self.children))
 
 
 class UnaryRule:
-    def __init__(self, child):
+    child: Any
+
+    def __init__(self, child: Any) -> None:
         self.child = child
 
-    def accept(self, visitor):
+    def accept(self, visitor: TwigPrinter) -> str:
         return visitor.visit(self, self.child.accept(visitor))
 
-    def __eq__(self, other):
-        return type(self) is type(other) and self.child == other.child
+    def __eq__(self, other: object) -> bool:
+        return type(self) is type(other) and self.child == getattr(other, "child", None)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "%s(%s)" % (self.__class__.__name__, repr(self.child))
 
 
 class LeafRule:
-    def __init__(self, value):
+    value: Any
+
+    def __init__(self, value: Any) -> None:
         self.value = value
 
-    def accept(self, visitor):
+    def accept(self, visitor: TwigPrinter) -> str:
         return visitor.visit(self, self.value)
 
-    def __eq__(self, other):
-        return type(self) is type(other) and self.value == other.value
+    def __eq__(self, other: object) -> bool:
+        return type(self) is type(other) and self.value == getattr(other, "value", None)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "%s(%s)" % (self.__class__.__name__, repr(self.value))
 
 
 class EmptyLeafRule:
-    def accept(self, visitor):
+    def accept(self, visitor: TwigPrinter) -> str:
         return visitor.visit(self)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         return type(self) is type(other)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__class__.__name__
 
 
