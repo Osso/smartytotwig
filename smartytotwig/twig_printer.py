@@ -5,6 +5,8 @@ from .smarty_grammar import (
     Array,
     AssignStatement,
     AtOperator,
+    BlockName,
+    BlockStatement,
     CommentStatement,
     Content,
     DivOperator,
@@ -16,6 +18,7 @@ from .smarty_grammar import (
     EqOperator,
     ExpNoModifier,
     Expression,
+    ExtendsStatement,
     ForContent,
     ForeachArray,
     ForeachelseStatement,
@@ -525,5 +528,20 @@ class TwigPrinter:
     @visitor(SimpleTag)
     def visit(self, node, value):
         return "{{ %s() }}" % value
+
+    @visitor(ExtendsStatement)
+    def visit(self, node, filename):
+        return "{%% extends %s %%}" % filename.replace(".tpl", ".twig")
+
+    @visitor(BlockName)
+    def visit(self, node, value):
+        return value
+
+    @visitor(BlockStatement)
+    def visit(self, node, name, content):
+        # Handle quoted block names - strip quotes
+        if name.startswith(("'", '"')):
+            name = name[1:-1]
+        return "{%% block %s %%}%s{%% endblock %%}" % (name, content)
 
     # pylint: enable=W0612,E0102

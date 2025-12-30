@@ -35,6 +35,7 @@ smartytotwig --smarty-file=examples/guestbook.tpl --twig-file=output.twig
 - If/elseif/else statements
 - Foreach loops with loop variables (`@iteration`, `@index`, `@total`, `@key`)
 - Foreachelse
+- Template inheritance: `{extends}`, `{block}`
 - Comments: `{* comment *}` → `{# comment #}`
 - Literal blocks: `{literal}...{/literal}`
 - Include: `{include file="foo.tpl"}` → `{% include "foo.twig" %}`

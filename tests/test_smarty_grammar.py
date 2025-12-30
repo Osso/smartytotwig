@@ -562,3 +562,38 @@ def test_assign_with_string():
 def test_include_with_variable():
     r = convert_code("{include file=$template}")
     assert r == "{% include template %}"
+
+
+def test_extends():
+    r = convert_code('{extends file="parent.tpl"}')
+    assert r == '{% extends "parent.twig" %}'
+
+
+def test_extends_with_variable():
+    r = convert_code("{extends file=$layout}")
+    assert r == "{% extends layout %}"
+
+
+def test_block():
+    r = convert_code("{block name=title}Hello{/block}")
+    assert r == "{% block title %}Hello{% endblock %}"
+
+
+def test_block_with_quoted_name():
+    r = convert_code('{block name="content"}Body{/block}')
+    assert r == "{% block content %}Body{% endblock %}"
+
+
+def test_block_with_content():
+    r = convert_code("{block name=sidebar}{$widget}{/block}")
+    assert r == "{% block sidebar %}{{ widget }}{% endblock %}"
+
+
+def test_extends_with_blocks():
+    r = convert_code('{extends file="base.tpl"}{block name=title}Page{/block}')
+    assert r == '{% extends "base.twig" %}{% block title %}Page{% endblock %}'
+
+
+def test_nested_blocks():
+    r = convert_code("{block name=outer}{block name=inner}content{/block}{/block}")
+    assert r == "{% block outer %}{% block inner %}content{% endblock %}{% endblock %}"

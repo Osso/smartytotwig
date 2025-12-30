@@ -442,6 +442,31 @@ class IncludeStatement(UnaryRule):
     grammar = "{", _, Keyword("include"), _, Literal("file="), Expression, _, "}"
 
 
+class ExtendsStatement(UnaryRule):
+    grammar = "{", _, Keyword("extends"), _, Literal("file="), Expression, _, "}"
+
+
+class BlockName(LeafRule):
+    grammar = re.compile(r"\w+")
+
+
+class BlockStatement(Rule):
+    grammar = (
+        "{",
+        _,
+        Keyword("block"),
+        _,
+        [Literal("name="), Literal("name =")],
+        [BlockName, String],
+        _,
+        "}",
+        SmartyLanguage,
+        "{/",
+        Keyword("block"),
+        "}",
+    )
+
+
 class SimpleTag(LeafRule):
     grammar = "{", _, re.compile("|".join(["init_time", "process_time"])), _, "}"
 
@@ -456,7 +481,9 @@ SmartyLanguage.grammar = some(
         TranslationStatement,
         IfStatement,
         ForStatement,
+        BlockStatement,
         IncludeStatement,
+        ExtendsStatement,
         AssignStatement,
         FunctionStatement,
         CommentStatement,
@@ -476,7 +503,9 @@ class SmartyLanguageMain(Rule):
             TranslationStatement,
             IfStatement,
             ForStatement,
+            BlockStatement,
             IncludeStatement,
+            ExtendsStatement,
             AssignStatement,
             FunctionStatement,
             CommentStatement,
