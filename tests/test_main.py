@@ -1,8 +1,4 @@
-import os
 import sys
-import tempfile
-
-import pytest
 
 from smartytotwig.main import main
 
