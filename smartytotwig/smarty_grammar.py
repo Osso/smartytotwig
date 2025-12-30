@@ -446,6 +446,23 @@ class ExtendsStatement(UnaryRule):
     grammar = "{", _, Keyword("extends"), _, Literal("file="), Expression, _, "}"
 
 
+class CaptureStatement(Rule):
+    grammar = (
+        "{",
+        _,
+        Keyword("capture"),
+        _,
+        [Literal("name="), Literal("assign=")],
+        Expression,
+        _,
+        "}",
+        SmartyLanguage,
+        "{/",
+        Keyword("capture"),
+        "}",
+    )
+
+
 class BlockName(LeafRule):
     grammar = re.compile(r"\w+")
 
@@ -482,6 +499,7 @@ SmartyLanguage.grammar = some(
         IfStatement,
         ForStatement,
         BlockStatement,
+        CaptureStatement,
         IncludeStatement,
         ExtendsStatement,
         AssignStatement,
@@ -504,6 +522,7 @@ class SmartyLanguageMain(Rule):
             IfStatement,
             ForStatement,
             BlockStatement,
+            CaptureStatement,
             IncludeStatement,
             ExtendsStatement,
             AssignStatement,

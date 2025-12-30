@@ -597,3 +597,23 @@ def test_extends_with_blocks():
 def test_nested_blocks():
     r = convert_code("{block name=outer}{block name=inner}content{/block}{/block}")
     assert r == "{% block outer %}{% block inner %}content{% endblock %}{% endblock %}"
+
+
+def test_capture():
+    r = convert_code('{capture name="foo"}content{/capture}')
+    assert r == "{% set foo %}content{% endset %}"
+
+
+def test_capture_assign():
+    r = convert_code('{capture assign="bar"}content{/capture}')
+    assert r == "{% set bar %}content{% endset %}"
+
+
+def test_capture_with_variable():
+    r = convert_code('{capture name="output"}{$foo}{/capture}')
+    assert r == "{% set output %}{{ foo }}{% endset %}"
+
+
+def test_capture_unquoted():
+    r = convert_code("{capture name=myvar}text{/capture}")
+    assert r == "{% set myvar %}text{% endset %}"

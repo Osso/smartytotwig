@@ -36,6 +36,7 @@ smartytotwig --smarty-file=examples/guestbook.tpl --twig-file=output.twig
 - Foreach loops with loop variables (`@iteration`, `@index`, `@total`, `@key`)
 - Foreachelse
 - Template inheritance: `{extends}`, `{block}`
+- Capture: `{capture name="x"}...{/capture}` → `{% set x %}...{% endset %}`
 - Comments: `{* comment *}` → `{# comment #}`
 - Literal blocks: `{literal}...{/literal}`
 - Include: `{include file="foo.tpl"}` → `{% include "foo.twig" %}`
@@ -48,4 +49,4 @@ smartytotwig --smarty-file=examples/guestbook.tpl --twig-file=output.twig
 
 ## Requirements
 
-- Python 3.9+
+- Python 3.12+

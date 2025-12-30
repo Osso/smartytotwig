@@ -7,6 +7,7 @@ from .smarty_grammar import (
     AtOperator,
     BlockName,
     BlockStatement,
+    CaptureStatement,
     CommentStatement,
     Content,
     DivOperator,
@@ -125,7 +126,8 @@ class TwigPrinter:
                 return child
 
         return '"%s"' % "".join(
-            out(child_node, child) for child_node, child in zip(node.children, children)
+            out(child_node, child)
+            for child_node, child in zip(node.children, children, strict=True)
         )
 
     @visitor(NoFilter)
@@ -414,7 +416,7 @@ class TwigPrinter:
     @visitor(ForeachParameters)
     def visit(self, node, *values):
         parameters = {}
-        for child, value in zip(node.children, values):
+        for child, value in zip(node.children, values, strict=True):
             parameters[type(child)] = value
         return parameters
 
@@ -543,5 +545,12 @@ class TwigPrinter:
         if name.startswith(("'", '"')):
             name = name[1:-1]
         return "{%% block %s %%}%s{%% endblock %%}" % (name, content)
+
+    @visitor(CaptureStatement)
+    def visit(self, node, name, content):
+        # Handle quoted names - strip quotes
+        if name.startswith(("'", '"')):
+            name = name[1:-1]
+        return "{%% set %s %%}%s{%% endset %%}" % (name, content)
 
     # pylint: enable=W0612,E0102

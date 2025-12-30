@@ -7,7 +7,7 @@ license = "GPL-2.0-or-later"
 authors = [
     { name = "Alessio Deiana", email = "adeiana@gmail.com" }
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.12"
 dependencies = [
     "pypeg2 @ git+https://github.com/osso/pypeg@a67f6ba75da71a8ee9694caaa6a4716354409fbb",
 ]
@@ -33,7 +33,7 @@ dev = [
 
 [tool.ruff]
 line-length = 100
-target-version = "py39"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
